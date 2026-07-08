@@ -2,7 +2,7 @@
 
 ## Project State
 
-Phases 1-3 complete. Backend foundation with Express, Mongoose, security middleware, error handling, health endpoints, and full auth system (register, login, logout, refresh, JWT cookies, protected routes, role-based auth, OAuth service stub). Client scaffolded with Vite (`client/src/main.jsx`, `client/src/App.jsx`). MUI theme files placed at `client/src/theme/`.
+Phases 1-4 complete. Backend foundation with Express, Mongoose, security middleware, error handling, health endpoints, and full auth system (register, login, logout, refresh, JWT cookies, protected routes, role-based auth, OAuth service stub). Client foundation complete: data mode routing (createBrowserRouter), Redux Toolkit auth state (register/login/logout/fetchCurrentUser thunks + clearAuth), fetch API client with 401→refresh→SESSION_EXPIRED pattern, reusable MUI wrappers with forwardRef (MuiTextField, MuiPasswordField, MuiButton, MuiCard), PublicAppBar with dark/light theme toggle, scrollable layout (AppBar fixed + content scrolls), auth/landing/404 pages, ProtectedRoute guard. MUI theme files placed at `client/src/theme/`. All deprecated MUI props remediated across 34 client files.
 
 ## Core Identity
 
@@ -54,6 +54,12 @@ Each phase follows **exactly 6 steps in order**:
 - OAuth-ready architecture with provider-neutral service stub (`oauth.service.js`); Google placeholder until credentials set
 - JSDoc on all public modules, functions, controllers, services, models
 - Safe logging — no passwords, tokens, raw cookies, or secrets in logs
+- Standardized response: `apiResponse(res, statusCode, message, data?)` — never ad-hoc JSON shapes
+- Standardized error: `throw new ApiError(statusCode, message)` — never raw throw
+- HTTP status codes: import `httpStatus` — never hardcode numeric codes
+- Route aggregation: all routes mounted in `routes/index.js`, registered via `app.use('/api/v1', indexRouter)`
+- Graceful shutdown on SIGINT/SIGTERM — server closes → mongoose closes → exit
+- Controllers delegate to services: controllers handle HTTP, services handle business logic/DB
 
 ## Frontend Conventions
 
@@ -63,6 +69,11 @@ Each phase follows **exactly 6 steps in order**:
 - `react-hook-form` with `register` — no `watch` or `Controller` unless documented with a code comment
 - UI English only; content (audio, transcription, reports, AI chat) can be Amharic/English/mixed
 - `apiClient` uses `credentials: "include"` for cookie-based auth
+- **No deprecated MUI props**: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`
+- **MuiPasswordField**: eye toggle via `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift; merges caller's `slotProps.input.endAdornment`
+- **Layout pattern**: fixed chrome + scrollable content on ALL layouts (public AND protected). Outer `height: 100vh; overflow: hidden`, chrome fixed, content `overflow-y: auto`. Never scroll body/html.
+- **401→refresh→retry in apiClient**: direct `fetch` for refresh (not apiClient, avoids circular dep); `SESSION_EXPIRED` on refresh failure dispatches `clearAuth`; login/register/refresh/logout excluded from 401 handling
+- **StrictMode double-fetch is normal**: React `<StrictMode>` in `main.jsx` double-invokes effects in dev — `fetchCurrentUser` fires twice on refresh. Production fires once. Do NOT remove StrictMode.
 
 ## Critical Package Decisions
 
@@ -100,4 +111,4 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/PROBLEM_STATEMENT.md` — detailed product requirements and AI prompt design
 - `docs/prompts/initial-one-time-prompt.md` — full specification (source of truth for all conventions above)
 - `docs/phases/phase-1-summary.md` through `docs/phases/phase-16-summary.md` — per-phase implementation records
-- `docs/phase-1-3-validation.md` — validated alignment between docs and implemented code for phases 1-3
+- `docs/phase-1-4-validation.md` — validated alignment between docs and implemented code for phases 1-4

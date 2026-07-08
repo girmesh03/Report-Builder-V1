@@ -91,7 +91,7 @@ Report Builder V1 enables an area supervisor to produce daily branch-visit repor
 - Audio file type, size, and duration validated.
 - httpOnly cookies for auth tokens; secure cookies in production.
 - Environment variables for all secrets; .env files never committed.
-- `.env` files are committed with placeholder/default values for local development.
+- `.env` files exist locally with placeholder values; they are NOT committed (ADR-006).
 
 ## Export Requirements
 

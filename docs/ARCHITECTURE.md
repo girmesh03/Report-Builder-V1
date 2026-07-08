@@ -103,53 +103,55 @@ client/
   src/
     components/
       audio/          Audio recorder, playback, controls, meter, guidelines
-      feedback/       Toast, error boundary
-      layout/         Public layout, AppShell (AppSidebar, AppTopbar, AppContent)
+      feedback/       **Toast, error boundary**
+      layout/         **PublicLayout, PublicAppBar**, AppShell (AppSidebar, AppTopbar, AppContent)
       reusable/       MUI wrappers prefixed Mui
-        MuiTextField.jsx
-        MuiPasswordField.jsx
-        MuiButton.jsx
-        MuiIconButton.jsx
-        MuiSelect.jsx
-        MuiDatePicker.jsx
-        MuiDialog.jsx
-        MuiDataGrid.jsx
-        MuiCard.jsx
-        MuiPageHeader.jsx
-        MuiEmptyState.jsx
-        MuiLoadingState.jsx
-        MuiErrorState.jsx
+        **MuiTextField.jsx**
+        **MuiPasswordField.jsx**
+        **MuiButton.jsx**
+        **MuiCard.jsx**
+        MuiIconButton.jsx    (future)
+        MuiSelect.jsx        (future)
+        MuiDatePicker.jsx    (future)
+        MuiDialog.jsx        (future)
+        MuiDataGrid.jsx      (future)
+        MuiPageHeader.jsx    (future)
+        MuiEmptyState.jsx    (future)
+        MuiLoadingState.jsx  (future)
+        MuiErrorState.jsx    (future)
     pages/
-      public/         Landing page
-      auth/           Login, register, OAuth callback
+      public/         **Landing page**
+      auth/           **Login, register, OAuth callback**
       dashboard/      Dashboard landing page
       profile/        Profile view and edit page
       reports/        Reports list/grid page with search, filter, pagination
-      errors/         404 page
+      errors/         **404 page**
     hooks/            Custom hooks (useAudioRecorder)
-    providers/        App-level providers (AppThemeProvider)
-    routes/           Route guards (ProtectedRoute)
-    services/         API client functions
-    store/            Redux store and slices
-    theme/            MUI theme config (AppTheme, themePrimitives, customizations/)
-    utils/            Helpers and constants
-    RootLayout.jsx    Root layout (theme provider, error boundary, fetchCurrentUser)
-    main.jsx          Entry point (data mode router config)
+    providers/        App-level providers (future)
+    routes/           **Route guards (ProtectedRoute)**
+    services/         **API client, auth API**
+    store/            **Redux store and auth slice**
+    theme/            **MUI theme config (AppTheme, themePrimitives, customizations/)**
+    utils/            **Constants, route paths**
+    **App.jsx**          Root layout (theme provider, error boundary, fetchCurrentUser, Outlet)
+    **main.jsx**         Entry point (Redux Provider + data mode router)
   .env
   package.json
 ```
 
 **Key patterns:**
-- Tree-shaking MUI imports in reusable components (`import TextField from '@mui/material/TextField'`).
+- Tree-shaking MUI imports (`import TextField from '@mui/material/TextField'`).
 - `sx` and `styled()` for styling; no Tailwind.
-- `react-hook-form` with `register`; no `watch` or `Controller` unless documented.
-- `forwardRef` on reusable MUI wrappers.
+- `react-hook-form` with `register`; no `watch` or `Controller` unless documented with a code comment.
+- `forwardRef` on all reusable MUI wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard).
 - MUI Grid uses `size` prop (not `item`).
-- `MuiPasswordField` provides show/hide toggle with no layout shift.
-- `MuiDialog` supports `disableEnforceFocus` and `disableRestoreFocus`.
-- AppThemeProvider wraps user-provided AppTheme as a dedicated provider layer.
-- Auth pages (LoginPage, RegisterPage) use reusable components (MuiTextField, MuiPasswordField, MuiButton).
-- AppShell composes AppSidebar (Dashboard, Reports, Profile, Logout nav) + AppTopbar (hamburger, page title, user menu) + AppContent (Outlet).
+- No deprecated MUI props: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`.
+- App.jsx serves as root layout: AppTheme, CssBaseline, AppErrorBoundary, AppToastContainer, `<Outlet />`, and `useEffect` dispatching `fetchCurrentUser()` on mount.
+- Auth pages (LoginPage, RegisterPage) use MuiCard + MuiTextField + MuiPasswordField from `components/reusable/`. MuiPasswordField has eye toggle for show/hide — `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift.
+- PublicLayout provides fixed AppBar + scrollable content area: outer `height: 100vh; overflow: hidden`, AppBar fixed, content `overflow-y: auto`. PublicAppBar includes logo (clickable → `/`) and dark/light theme toggle via `useColorScheme`.
+- ProtectedRoute shows loading spinner during auth initialisation, redirects to /login with `state.from` if not authenticated.
+- apiClient uses `VITE_API_BASE_URL` with `credentials: "include"`. On 401, attempts `/auth/refresh` via direct `fetch` (not apiClient, avoids circular dependency); refresh success retries original request, refresh failure throws `SESSION_EXPIRED` which dispatches `clearAuth`. Login/register/refresh/logout excluded from 401 handling.
+- authSlice handles register, login, logout, fetchCurrentUser async thunks, plus `clearAuth` action for external session-expiry dispatch.
 - ReportsPage provides list (card) and grid (MUI Data Grid) view toggle, search by title, status filter, and server-side pagination.
 - ReportMetadataDialog creates draft reports with date, branch selection (multi-select), title, and notes via React Hook Form.
 - reportsSlice and branchesSlice manage report/branch state with createAsyncThunk for API calls.

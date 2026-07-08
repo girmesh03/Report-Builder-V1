@@ -7,8 +7,8 @@
 | 1  | Repository foundation and documentation| Git setup, env examples, package.json, docs, gitignore    |
 | 2  | Backend foundation                     | Express server, Mongoose connection, config, middleware   |
 | 3  | Authentication and profile API         | User model, auth routes, JWT, OAuth, profile endpoints   |
-| 4  | Frontend foundation, routing, auth     | Vite scaffold, MUI setup, routes, auth pages             |
-| 5  | Theme and reusable MUI components      | MUI theme, MuiTextField, MuiDialog, etc.                 |
+| 4  | Frontend foundation, routing, auth     | React Router data mode, Redux Toolkit auth, apiClient with 401→refresh, reusable MUI wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard), PublicAppBar + scrollable layout, auth/landing/404 pages, ProtectedRoute guard |
+| 5  | Theme and reusable MUI components      | Remaining MUI wrappers (MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid, MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState); MuiTextField/MuiPasswordField/MuiButton/MuiCard already done in Phase 4 |
 | 6  | Protected dashboard and profile page   | Dashboard shell, sidebar, top bar, profile page           |
 | 7  | Branch and report backend              | Branch + Report models, CRUD endpoints                   |
 | 8  | Reports list/grid frontend             | Report list cards, MUI Data Grid, create report flow     |

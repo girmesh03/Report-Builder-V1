@@ -24,6 +24,19 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 5. Ensure MongoDB is running on `localhost:27017`.
 6. Run `npm run dev:backend` (port 4000) and `npm run dev:client` (port 3000).
 
+## Frontend Routes
+
+| Path | Page | Access |
+|---|---|---|
+| `/` | Landing page (hero + CTAs) | Public |
+| `/login` | Login form (MuiCard, email/password, OAuth section) | Public |
+| `/register` | Registration form (MuiCard, name/email/password) | Public |
+| `/oauth/callback` | OAuth redirect handler | Public |
+| `/dashboard` | Dashboard (via ProtectedRoute) | Authenticated |
+| `/reports` | Reports list (via ProtectedRoute) | Authenticated |
+| `/profile` | Profile page (via ProtectedRoute) | Authenticated |
+| `*` | 404 page (SVG + navigation) | Public |
+
 ## Development Phases
 
-The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`.
+The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–4 complete.
