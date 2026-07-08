@@ -53,9 +53,9 @@ Root files:
 - `docs/research/addis-ai.md`
 - `docs/phases/phase-1-summary.md`
 - `backend/package.json`
-- `backend/.env.example`
+- `backend/.env`
 - `client/package.json`
-- `client/.env.example`
+- `client/.env`
 
 Backend `package.json`:
 

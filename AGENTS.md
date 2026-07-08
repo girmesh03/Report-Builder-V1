@@ -2,7 +2,7 @@
 
 ## Project State
 
-Greenfield — no code written yet. Only `docs/` files staged for first commit. No `package.json`, `.gitignore`, or `.env` files exist.
+Greenfield — no custom app code yet. Client scaffolded with Vite (`client/src/main.jsx`, `client/src/App.jsx`). MUI theme files placed at `client/src/theme/`. Backend structure defined (`backend/src/` to be built in Phase 2).
 
 ## Core Identity
 
@@ -13,7 +13,7 @@ MERN stack app for area supervisors to generate daily Amharic branch-visit repor
 | Layer | Choice |
 |---|---|
 | Backend | Node.js, Express, Mongoose, **ES Modules only** |
-| Frontend | React 18 + Vite, MUI 6, Redux Toolkit, React Router 7, React Hook Form |
+| Frontend | React 19 + Vite 8, MUI 9, Redux Toolkit, React Router 8, React Hook Form |
 | Auth | JWT (access 15m, refresh 7d) in httpOnly cookies |
 | DB | MongoDB local (`mongodb://127.0.0.1:27017/report-builder-v1`) |
 | AI | Addis AI backend proxy only (no client-side keys) |

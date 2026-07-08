@@ -120,7 +120,7 @@ OAuth:
 
 Update:
 
-- `backend/.env.example`
+- `backend/.env`
 - `docs/ARCHITECTURE.md`
 - `docs/phases/phase-3-summary.md`
 

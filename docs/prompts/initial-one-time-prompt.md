@@ -364,11 +364,11 @@ Package notes:
 - Use secure cookies in production.
 - Use environment variables for secrets.
 - Do not commit `.env`.
-- Provide `.env.example`.
+- Provide `.env` files with placeholder/default values.
 
 ## Required Environment Variables
 
-Backend `.env.example` should include:
+Backend `.env` should include:
 
 ```text
 NODE_ENV=development
@@ -392,7 +392,7 @@ OAUTH_GOOGLE_CLIENT_SECRET=
 OAUTH_GOOGLE_CALLBACK_URL=http://localhost:4000/api/v1/auth/oauth/google/callback
 ```
 
-Client `.env.example` should include:
+Client `.env` should include:
 
 ```text
 VITE_API_BASE_URL=http://localhost:4000/api/v1

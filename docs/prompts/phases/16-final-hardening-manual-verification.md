@@ -35,7 +35,7 @@ Backend checklist:
 - Pagination uses `mongoose-paginate-v2`.
 - Constants are in `backend/src/utils/constants.js`.
 - No hardcoded secrets.
-- `.env.example` is complete.
+- `.env` files contain all required variables with placeholder/default values.
 - Auth and AI routes are rate-limited.
 - Audio validation matches Addis AI limits.
 - Addis AI key is backend-only.

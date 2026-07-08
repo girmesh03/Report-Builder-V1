@@ -67,7 +67,7 @@ backend/
       profile.validators.js express-validator rules for profile update and password change
       branch.validators.js  express-validator rules for branch create and update
       report.validators.js  express-validator rules for report create and update
-  .env.example
+  .env
   package.json
 ```
 
@@ -92,7 +92,7 @@ backend/
 
 ## Frontend Architecture
 
-**Stack:** React 18, Vite, MUI 6, Redux Toolkit, React Router 7, React Hook Form.
+**Stack:** React 19, Vite 8, MUI 9, Redux Toolkit, React Router 8, React Hook Form.
 
 **Structure:**
 
@@ -134,7 +134,7 @@ client/
     utils/            Helpers and constants
     RootLayout.jsx    Root layout (theme provider, error boundary, fetchCurrentUser)
     main.jsx          Entry point (data mode router config)
-  .env.example
+  .env
   package.json
 ```
 

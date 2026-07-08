@@ -20,11 +20,7 @@ Analyze Phases 1-4. Confirm reusable components align with existing auth pages a
 
 ### Step 4: Phase Execution Without Deviation
 
-Before implementing theme integration, ask the user to place the attached `theme/*` files into:
-
-`client/src/theme/`
-
-Do not invent a permanent custom theme if those files are missing. If the user confirms the files are placed, inspect them and integrate them. If the user cannot provide the files yet, create only a minimal theme adapter that can later import from `client/src/theme/`, and clearly document that full theme integration is pending.
+Theme files are already placed at `client/src/theme/` (AppTheme.jsx, themePrimitives.js, customizations/). Inspect them and integrate, do not ask the user to re-provide.
 
 Required reusable component directory:
 

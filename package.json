@@ -1,0 +1,12 @@
+{
+  "name": "report-builder-v1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MERN stack app for daily Amharic branch-visit report generation",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix client",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client"
+  }
+}

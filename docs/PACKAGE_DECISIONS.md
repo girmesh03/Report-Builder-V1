@@ -62,7 +62,15 @@
 | Package               | Purpose                      |
 |-----------------------|------------------------------|
 | @vitejs/plugin-react  | Vite React plugin            |
+| oxlint                | Fast linter                  |
 | vite                  | Build tool and dev server    |
+
+## Client Type Packages (Dev Only — Editor IntelliSense)
+
+| Package               | Purpose                      |
+|-----------------------|------------------------------|
+| @types/react          | React type definitions (dev-only, no runtime impact) |
+| @types/react-dom      | React DOM type definitions (dev-only, no runtime impact) |
 
 ## Packages NOT Installed (With Reasons)
 
