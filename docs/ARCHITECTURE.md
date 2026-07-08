@@ -14,28 +14,28 @@ Client (React + Vite)  →  API Server (Express)  →  MongoDB
 
 **Stack:** Node.js, Express, Mongoose, ES Modules.
 
-**Structure:**
+**Structure (implemented in bold):**
 
 ```
 backend/
   src/
-    app.js              Express app setup (middleware, routes, error handlers)
-    server.js           Entry point (HTTP server, DB connection, graceful shutdown)
+    **app.js              Express app setup (middleware, routes, error handlers)**
+    **server.js           Entry point (HTTP server, DB connection, graceful shutdown)**
     config/
-      env.js            Environment variable loader and config object
-      db.js             Mongoose connection setup
+      **env.js            Environment variable loader and config object**
+      **db.js             Mongoose connection setup**
     controllers/
-      health.controller.js   Health check endpoints
+      **health.controller.js   Health check endpoints**
       auth.controller.js     Auth endpoints (register, login, logout, refresh, me, OAuth)
       profile.controller.js  Profile endpoints (get, update, change password)
       branch.controller.js   Branch CRUD with pagination and soft deactivation
       report.controller.js   Report CRUD with pagination and user ownership
     middleware/
-      security.middleware.js      Helmet, cors, compression, cookie-parser,
-                                  mongo-sanitize, rate-limit
-      requestLogger.middleware.js Morgan logger (development only)
-      error.middleware.js         Global error handler (consistent JSON)
-      notFound.middleware.js      404 handler
+      **security.middleware.js      Helmet, cors, compression, cookie-parser,
+                                  mongo-sanitize, rate-limit**
+      **requestLogger.middleware.js Morgan logger (development only)**
+      **error.middleware.js         Global error handler (consistent JSON)**
+      **notFound.middleware.js      404 handler**
       auth.middleware.js          JWT authentication and role-based authorization
     models/
       user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)
@@ -43,8 +43,8 @@ backend/
       branch.model.js     Branch schema (name, code, area, address, managerName, managerPhone, isActive)
       report.model.js     Report schema (user, reportDate, title, branches, status, audio, transcription, generation)
     routes/
-      index.js          Route aggregator
-      health.routes.js  Health check route definitions
+      **index.js          Route aggregator**
+      **health.routes.js  Health check route definitions**
       auth.routes.js    Auth route definitions
       profile.routes.js Profile route definitions
       branch.routes.js  Branch route definitions (all authenticated)
@@ -56,12 +56,12 @@ backend/
       branch.service.js Branch CRUD with pagination, search, and soft deactivation
       report.service.js Report CRUD with pagination, filtering, and user ownership
     utils/
-      constants.js      Centralized constants (no magic values elsewhere)
-      httpStatus.js     HTTP status code constants
-      apiError.js       Custom operational error class
-      apiResponse.js    Standardised success response helper
+      **constants.js      Centralized constants (no magic values elsewhere)**
+      **httpStatus.js     HTTP status code constants**
+      **apiError.js       Custom operational error class**
+      **apiResponse.js    Standardised success response helper**
       cookieOptions.js  httpOnly cookie configuration for access and refresh tokens
-      logger.js         Structured logging utility
+      **logger.js         Structured logging utility**
     validators/
       auth.validators.js    express-validator rules for register and login
       profile.validators.js express-validator rules for profile update and password change

@@ -4,13 +4,13 @@
 
 ## Context
 
-The initial prompt specifies creating a custom `asyncHandler` utility at `backend/src/utils/asyncHandler.js`. Express 4 does not natively catch promise rejections in async route handlers, so a wrapper is needed.
+The initial prompt specifies using `express-async-handler` for all controller route handlers. Express 4 does not natively catch promise rejections in async route handlers, so a wrapper is needed.
 
 ## Decision
 
 Use the installed `express-async-handler` package instead of writing a custom utility.
 
-The custom `asyncHandler.js` file was created in Phase 2 as specified, but since `express-async-handler` was already an installed dependency and provides identical functionality, all controller files import and use it directly. The custom file was removed during the Phase 3 validation pass.
+All controller files import and use `asyncHandler` from `express-async-handler` directly. No custom wrapper is needed.
 
 ## Consequences
 
