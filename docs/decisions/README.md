@@ -28,4 +28,4 @@ Each ADR follows a template:
 | 003 | Standalone MongoDB (no transactions) — SUPERSEDED | 2026-07-05 |
 | 004 | express-async-handler over custom wrapper | 2026-07-05 |
 | 005 | Audio recording strategy (flexible duration, 10 MB limit, chunked STT) | 2026-07-07 |
-| 006 | Committed .env files with placeholder values | 2026-07-08 |
+| 006 | Local .env files with placeholder values (not committed) | 2026-07-08 |

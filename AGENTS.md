@@ -2,7 +2,7 @@
 
 ## Project State
 
-Greenfield — no custom app code yet. Client scaffolded with Vite (`client/src/main.jsx`, `client/src/App.jsx`). MUI theme files placed at `client/src/theme/`. Backend structure defined (`backend/src/` to be built in Phase 2).
+Phases 1-3 complete. Backend foundation with Express, Mongoose, security middleware, error handling, health endpoints, and full auth system (register, login, logout, refresh, JWT cookies, protected routes, role-based auth, OAuth service stub). Client scaffolded with Vite (`client/src/main.jsx`, `client/src/App.jsx`). MUI theme files placed at `client/src/theme/`.
 
 ## Core Identity
 
@@ -15,7 +15,7 @@ MERN stack app for area supervisors to generate daily Amharic branch-visit repor
 | Backend | Node.js, Express, Mongoose, **ES Modules only** |
 | Frontend | React 19 + Vite 8, MUI 9, Redux Toolkit, React Router 8, React Hook Form |
 | Auth | JWT (access 15m, refresh 7d) in httpOnly cookies |
-| DB | MongoDB local (`mongodb://127.0.0.1:27017/report-builder-v1`) |
+| DB | MongoDB (`mongodb://127.0.0.1:27017/report-builder-v1`); Atlas with replica set for transactions |
 | AI | Addis AI backend proxy only (no client-side keys) |
 | Language | **JavaScript only** — no TypeScript, no Next.js, no Tailwind |
 
@@ -34,21 +34,26 @@ Each phase follows **exactly 6 steps in order**:
 
 ## Git Conventions
 
-- Feature branches: `phase-N-description` (e.g. `phase-2-backend-foundation`)
+- Feature branches: `phase-N-description` (e.g. `phase-3-authentication-profile-api`)
 - Commits: `feat: phase N description`
 - Each phase merges into `main` after approval, then branch is deleted
 - No direct commits to `main`
 
 ## Backend Conventions
 
-- `express-async-handler` wraps all controllers → errors forwarded via `next(error)`
-- Write controllers use `try/catch/finally` with MongoDB sessions
+- `express-async-handler` wraps all controllers → errors forwarded via `next(error)` (ADR-004)
+- Write controllers use `try/catch/finally` with MongoDB sessions/transactions (register, updateProfile, changePassword)
+- `authenticate` middleware extracts JWT from `req.cookies.accessToken` (httpOnly), verifies via `token.service`, attaches `req.user` (user doc without passwordHash)
+- `authorize(...roles)` middleware checks `req.user.role` — returns 403 if not in allowed roles
 - `mongoose-paginate-v2` for paginated list endpoints (default page: 1, limit: 10, max: 100)
 - All constants in `backend/src/utils/constants.js` — no magic values
-- All config via frozen `env` object from `backend/src/config/env.js`
+- All config via frozen `env` object from `backend/src/config/env.js` (20+ vars)
 - `normalizeEmail({ gmail_remove_dots: false })` on auth validators (preserves Gmail plus/dot addressing)
+- `express-validator` rules in `validators/*.js`, results checked via `validate.middleware.js` (422 on failure)
+- httpOnly cookie options: access token scoped to `/api/v1` (15m), refresh token scoped to `/api/v1/auth` (7d) (ADR-002)
+- OAuth-ready architecture with provider-neutral service stub (`oauth.service.js`); Google placeholder until credentials set
 - JSDoc on all public modules, functions, controllers, services, models
-- Safe logging — no raw audio, transcription, or reports in production logs
+- Safe logging — no passwords, tokens, raw cookies, or secrets in logs
 
 ## Frontend Conventions
 
@@ -63,7 +68,9 @@ Each phase follows **exactly 6 steps in order**:
 
 | Decision | Reason |
 |---|---|
-| `bcryptjs` over `bcrypt` | bcrypt requires native compilation (fails on Windows without VS Build Tools). bcryptjs is pure-JS, identical API. |
+| `bcryptjs` over `bcrypt` | bcrypt requires native compilation (fails on Windows without VS Build Tools). bcryptjs is pure-JS, identical API. (ADR-001) |
+| `express-async-handler` over custom wrapper | Package already installed, 0 dependencies, identical API. One less file to maintain. (ADR-004) |
+| No `.env.example` files | `.env` is gitignored, contains placeholder values as local reference. Real secrets never enter version control. (ADR-006) |
 | No `cookie` package | No server-side cookie manipulation needed beyond `cookie-parser` |
 | No frontend `dotenv` | Vite already loads `VITE_`-prefixed env vars |
 | Native `fetch` (no axios) | Sufficient for both backend and frontend |
@@ -71,7 +78,7 @@ Each phase follows **exactly 6 steps in order**:
 
 ## Key Environment Variables
 
-Backend `.env` needs: `NODE_ENV`, `PORT` (4000), `CLIENT_ORIGIN`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADDIS_AI_BASE_URL`, `ADDIS_AI_API_KEY`, `ADDIS_AI_TEXT_MODEL`, `ADDIS_AI_STT_LANGUAGE_CODE`.
+Backend `.env` needs: `NODE_ENV`, `PORT` (4000), `CLIENT_ORIGIN`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`, `ADDIS_AI_BASE_URL`, `ADDIS_AI_API_KEY`, `ADDIS_AI_TEXT_MODEL`, `ADDIS_AI_DEFAULT_TARGET_LANGUAGE`, `ADDIS_AI_STT_LANGUAGE_CODE`, `ADDIS_AI_TIMEOUT_MS`, `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_GOOGLE_CALLBACK_URL`.
 
 Client `.env` needs: `VITE_API_BASE_URL`, `VITE_APP_NAME`.
 
@@ -92,4 +99,5 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/DEVELOPMENT_PHASES.md` — 16-phase roadmap
 - `docs/PROBLEM_STATEMENT.md` — detailed product requirements and AI prompt design
 - `docs/prompts/initial-one-time-prompt.md` — full specification (source of truth for all conventions above)
-- `docs/phase-1-6-validation.md` — validated alignment between docs and implemented code for phases 1-6
+- `docs/phases/phase-1-summary.md` through `docs/phases/phase-16-summary.md` — per-phase implementation records
+- `docs/phase-1-3-validation.md` — validated alignment between docs and implemented code for phases 1-3

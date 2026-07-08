@@ -10,7 +10,7 @@ JWT-based authentication requires the client to send a token with every API requ
 
 Store both the access token (15 min) and refresh token (7 days) in `httpOnly` cookies, not in `localStorage`/`sessionStorage`.
 
-- Access token cookie: `path=/`, scoped to the entire API.
+- Access token cookie: `path=/api/v1`, scoped to API routes only.
 - Refresh token cookie: `path=/api/v1/auth`, scoped to refresh endpoint only.
 - Both cookies use `secure` in production and `sameSite: lax`.
 - The frontend uses `credentials: 'include'` on all fetch calls.

@@ -26,8 +26,8 @@ backend/
       **db.js             Mongoose connection setup**
     controllers/
       **health.controller.js   Health check endpoints**
-      auth.controller.js     Auth endpoints (register, login, logout, refresh, me, OAuth)
-      profile.controller.js  Profile endpoints (get, update, change password)
+      **auth.controller.js     Auth endpoints (register, login, logout, refresh, me, OAuth)**
+      **profile.controller.js  Profile endpoints (get, update, change password)**
       branch.controller.js   Branch CRUD with pagination and soft deactivation
       report.controller.js   Report CRUD with pagination and user ownership
     middleware/
@@ -36,23 +36,24 @@ backend/
       **requestLogger.middleware.js Morgan logger (development only)**
       **error.middleware.js         Global error handler (consistent JSON)**
       **notFound.middleware.js      404 handler**
-      auth.middleware.js          JWT authentication and role-based authorization
+      **auth.middleware.js          JWT authentication and role-based authorization**
+      **validate.middleware.js      express-validator result handler**
     models/
-      user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)
-      oauthAccount.model.js  OAuth account schema (user, provider, providerAccountId)
+      **user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)**
+      **oauthAccount.model.js  OAuth account schema (user, provider, providerAccountId)**
       branch.model.js     Branch schema (name, code, area, address, managerName, managerPhone, isActive)
       report.model.js     Report schema (user, reportDate, title, branches, status, audio, transcription, generation)
     routes/
       **index.js          Route aggregator**
       **health.routes.js  Health check route definitions**
-      auth.routes.js    Auth route definitions
-      profile.routes.js Profile route definitions
+      **auth.routes.js    Auth route definitions**
+      **profile.routes.js Profile route definitions**
       branch.routes.js  Branch route definitions (all authenticated)
       report.routes.js  Report route definitions (all authenticated, ownership enforced)
     services/
-      auth.service.js   Auth business logic (register, login, refresh)
-      token.service.js  JWT access and refresh token generation/verification
-      oauth.service.js  OAuth provider config and provider list
+      **auth.service.js   Auth business logic (register, login, refresh)**
+      **token.service.js  JWT access and refresh token generation/verification**
+      **oauth.service.js  OAuth provider config and provider list**
       branch.service.js Branch CRUD with pagination, search, and soft deactivation
       report.service.js Report CRUD with pagination, filtering, and user ownership
     utils/
@@ -60,11 +61,11 @@ backend/
       **httpStatus.js     HTTP status code constants**
       **apiError.js       Custom operational error class**
       **apiResponse.js    Standardised success response helper**
-      cookieOptions.js  httpOnly cookie configuration for access and refresh tokens
+      **cookieOptions.js  httpOnly cookie configuration for access and refresh tokens**
       **logger.js         Structured logging utility**
     validators/
-      auth.validators.js    express-validator rules for register and login
-      profile.validators.js express-validator rules for profile update and password change
+      **auth.validators.js    express-validator rules for register and login**
+      **profile.validators.js express-validator rules for profile update and password change**
       branch.validators.js  express-validator rules for branch create and update
       report.validators.js  express-validator rules for report create and update
   .env
