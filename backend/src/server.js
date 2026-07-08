@@ -6,6 +6,7 @@
  * @module server
  */
 import app from './app.js';
+import mongoose from 'mongoose';
 import env from './config/env.js';
 import connectDB from './config/db.js';
 import logger from './utils/logger.js';
@@ -17,8 +18,10 @@ const server = app.listen(env.PORT, () => {
 
 const gracefulShutdown = (signal) => {
   logger.info(`${signal} received — shutting down gracefully`);
-  server.close(() => {
+  server.close(async () => {
     logger.info('HTTP server closed');
+    await mongoose.disconnect();
+    logger.info('MongoDB disconnected');
     process.exit(0);
   });
 };

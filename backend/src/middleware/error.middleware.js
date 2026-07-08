@@ -6,10 +6,12 @@
  * @module middleware/error
  */
 import httpStatus from '../utils/httpStatus.js';
+import apiResponse from '../utils/apiResponse.js';
+import env from '../config/env.js';
 import logger from '../utils/logger.js';
 
 /**
- * @param {Error} err - Error object
+ * @param {ApiError|Error} err - Error object
  * @param {import('express').Request} req - Express request
  * @param {import('express').Response} res - Express response
  * @param {import('express').NextFunction} next - Express next function
@@ -23,11 +25,8 @@ const errorHandler = (err, req, res, next) => {
     logger.error('Unexpected error', { error: err.message, stack: err.stack });
   }
 
-  res.status(statusCode).json({
-    success: false,
-    message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
+  const data = env.NODE_ENV === 'development' ? { stack: err.stack } : undefined;
+  apiResponse(res, statusCode, message, data);
 };
 
 export default errorHandler;

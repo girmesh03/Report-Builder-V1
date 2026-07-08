@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for date pickers.
+ * @module customizations/datePickers
  */
 import { alpha } from '@mui/material/styles';
 import { menuItemClasses } from '@mui/material/MenuItem';

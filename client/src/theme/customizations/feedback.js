@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for feedback components.
+ * @module customizations/feedback
  */
 import { alpha } from "@mui/material/styles";
 import { gray, orange } from "../themePrimitives";

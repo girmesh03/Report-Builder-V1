@@ -22,6 +22,7 @@ const env = Object.freeze({
   ADDIS_AI_API_KEY: process.env.ADDIS_AI_API_KEY || '',
   ADDIS_AI_TEXT_MODEL: process.env.ADDIS_AI_TEXT_MODEL || '',
   ADDIS_AI_DEFAULT_TARGET_LANGUAGE: process.env.ADDIS_AI_DEFAULT_TARGET_LANGUAGE || 'am',
+  ADDIS_AI_STT_MODEL: process.env.ADDIS_AI_STT_MODEL || '',
   ADDIS_AI_STT_LANGUAGE_CODE: process.env.ADDIS_AI_STT_LANGUAGE_CODE || 'am',
   ADDIS_AI_TIMEOUT_MS: parseInt(process.env.ADDIS_AI_TIMEOUT_MS, 10) || 60000,
 

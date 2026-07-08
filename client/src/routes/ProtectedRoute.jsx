@@ -7,7 +7,7 @@
  * @module routes/ProtectedRoute
  */
 import { useSelector } from 'react-redux';
-import { Navigate, Outlet } from 'react-router';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ROUTE_PATHS } from '../utils/routePaths.js';
@@ -16,6 +16,7 @@ import { ROUTE_PATHS } from '../utils/routePaths.js';
  * @returns {JSX.Element}
  */
 function ProtectedRoute() {
+  const location = useLocation();
   const { isAuthenticated, initializing } = useSelector((state) => state.auth);
 
   if (initializing) {
@@ -34,7 +35,7 @@ function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTE_PATHS.LOGIN} replace />;
+    return <Navigate to={ROUTE_PATHS.LOGIN} state={{ from: location }} replace />;
   }
 
   return <Outlet />;

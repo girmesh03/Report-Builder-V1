@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for input components.
+ * @module customizations/inputs
  */
 import { createElement } from "react";
 import { alpha } from "@mui/material/styles";

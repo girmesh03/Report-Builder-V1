@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for charts.
+ * @module customizations/charts
  */
 import { axisClasses } from "@mui/x-charts/ChartsAxis";
 import { legendClasses } from "@mui/x-charts/ChartsLegend";

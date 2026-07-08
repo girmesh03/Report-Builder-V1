@@ -7,6 +7,7 @@
  */
 import { validationResult } from 'express-validator';
 import httpStatus from '../utils/httpStatus.js';
+import apiResponse from '../utils/apiResponse.js';
 
 /**
  * @param {import('express').Request} req - Express request
@@ -17,11 +18,8 @@ import httpStatus from '../utils/httpStatus.js';
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(httpStatus.UNPROCESSABLE_ENTITY).json({
-      success: false,
-      message: 'Validation failed',
-      errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
-    });
+    const formatted = errors.array().map((e) => ({ field: e.path, message: e.msg }));
+    apiResponse(res, httpStatus.UNPROCESSABLE_ENTITY, 'Validation failed', formatted);
     return;
   }
   next();

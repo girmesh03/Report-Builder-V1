@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for navigation components.
+ * @module customizations/navigation
  */
 import { createElement, forwardRef } from "react";
 import { alpha } from "@mui/material/styles";

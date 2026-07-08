@@ -2,6 +2,8 @@
  * Reusable MUI Button wrapper.
  *
  * Wrapped with forwardRef for react-hook-form compatibility.
+ * Use MUI's native `loading`, `loadingIndicator`, and
+ * `loadingPosition` props on the consuming side.
  *
  * @module components/reusable/MuiButton
  */

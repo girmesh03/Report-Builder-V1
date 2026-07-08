@@ -1,5 +1,5 @@
 /**
- * @file Theme customization index exports.
+ * @module customizations/index
  */
 export { default as inputsCustomizations } from "./inputs";
 export { default as dataDisplayCustomizations } from "./dataDisplay";

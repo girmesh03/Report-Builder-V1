@@ -2,7 +2,7 @@
 
 ## Project State
 
-Phases 1-4 complete. Backend foundation with Express, Mongoose, security middleware, error handling, health endpoints, and full auth system (register, login, logout, refresh, JWT cookies, protected routes, role-based auth, OAuth service stub). Client foundation complete: data mode routing (createBrowserRouter), Redux Toolkit auth state (register/login/logout/fetchCurrentUser thunks + clearAuth), fetch API client with 401→refresh→SESSION_EXPIRED pattern, reusable MUI wrappers with forwardRef (MuiTextField, MuiPasswordField, MuiButton, MuiCard), PublicAppBar with dark/light theme toggle, scrollable layout (AppBar fixed + content scrolls), auth/landing/404 pages, ProtectedRoute guard. MUI theme files placed at `client/src/theme/`. All deprecated MUI props remediated across 34 client files.
+Phases 1-5 complete. Phase 5 audit-driven fixes applied across backend and client. Backend all-clean: graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env. Client all-clean: AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file. All backend and client files pass syntax validation and builds.
 
 ## Core Identity
 
@@ -65,12 +65,13 @@ Each phase follows **exactly 6 steps in order**:
 
 - MUI tree-shaking imports: `import TextField from '@mui/material/TextField'`
 - MUI Grid uses `size` prop, not `item` (e.g. `<Grid size={{ xs: 12, md: 6 }}>`)
-- Reusable MUI wrappers in `client/src/components/reusable/`, prefixed `Mui` (e.g. `MuiTextField.jsx`), wrapped with `forwardRef`
+- 12 reusable MUI wrappers in `client/src/components/reusable/`, prefixed `Mui`. Input wrappers use `forwardRef`: MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid. Presentation wrappers: MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState.
 - `react-hook-form` with `register` — no `watch` or `Controller` unless documented with a code comment
 - UI English only; content (audio, transcription, reports, AI chat) can be Amharic/English/mixed
 - `apiClient` uses `credentials: "include"` for cookie-based auth
 - **No deprecated MUI props**: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`
 - **MuiPasswordField**: eye toggle via `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift; merges caller's `slotProps.input.endAdornment`
+- **MuiButton**: uses MUI's native `loading`, `loadingIndicator`, and `loadingPosition` props — pass `<CircularProgress size={20} />` as `loadingIndicator` and `"center"` as `loadingPosition` for centered spinner
 - **Layout pattern**: fixed chrome + scrollable content on ALL layouts (public AND protected). Outer `height: 100vh; overflow: hidden`, chrome fixed, content `overflow-y: auto`. Never scroll body/html.
 - **401→refresh→retry in apiClient**: direct `fetch` for refresh (not apiClient, avoids circular dep); `SESSION_EXPIRED` on refresh failure dispatches `clearAuth`; login/register/refresh/logout excluded from 401 handling
 - **StrictMode double-fetch is normal**: React `<StrictMode>` in `main.jsx` double-invokes effects in dev — `fetchCurrentUser` fires twice on refresh. Production fires once. Do NOT remove StrictMode.
@@ -89,7 +90,7 @@ Each phase follows **exactly 6 steps in order**:
 
 ## Key Environment Variables
 
-Backend `.env` needs: `NODE_ENV`, `PORT` (4000), `CLIENT_ORIGIN`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`, `ADDIS_AI_BASE_URL`, `ADDIS_AI_API_KEY`, `ADDIS_AI_TEXT_MODEL`, `ADDIS_AI_DEFAULT_TARGET_LANGUAGE`, `ADDIS_AI_STT_LANGUAGE_CODE`, `ADDIS_AI_TIMEOUT_MS`, `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_GOOGLE_CALLBACK_URL`.
+Backend `.env` needs: `NODE_ENV`, `PORT` (4000), `CLIENT_ORIGIN`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`, `ADDIS_AI_BASE_URL`, `ADDIS_AI_API_KEY`, `ADDIS_AI_TEXT_MODEL`, `ADDIS_AI_STT_MODEL`, `ADDIS_AI_DEFAULT_TARGET_LANGUAGE`, `ADDIS_AI_STT_LANGUAGE_CODE`, `ADDIS_AI_TIMEOUT_MS`, `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_GOOGLE_CALLBACK_URL`.
 
 Client `.env` needs: `VITE_API_BASE_URL`, `VITE_APP_NAME`.
 
@@ -112,3 +113,5 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/prompts/initial-one-time-prompt.md` — full specification (source of truth for all conventions above)
 - `docs/phases/phase-1-summary.md` through `docs/phases/phase-16-summary.md` — per-phase implementation records
 - `docs/phase-1-4-validation.md` — validated alignment between docs and implemented code for phases 1-4
+- `docs/phase-1-6-validation.md` — broader validation report covering phases 1-3
+- `AGENTS.md` — this file (project state, conventions, protocol)

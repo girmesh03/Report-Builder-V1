@@ -39,4 +39,4 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 
 ## Development Phases
 
-The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–4 complete.
+The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–5 complete.

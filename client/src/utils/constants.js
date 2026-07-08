@@ -4,6 +4,11 @@
  * @module utils/constants
  */
 
+export const API_CONFIG = Object.freeze({
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1',
+  APP_NAME: import.meta.env.VITE_APP_NAME || 'Report Builder',
+});
+
 export const AUTH_ROUTES = Object.freeze({
   LOGIN: '/login',
   REGISTER: '/register',

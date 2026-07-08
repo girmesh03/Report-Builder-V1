@@ -14,7 +14,7 @@ import {
   buildAuthCookies,
   buildClearCookieOptions,
 } from '../services/auth.service.js';
-import { getOAuthProviders } from '../services/oauth.service.js';
+import { getOAuthProviders, getGoogleOAuthUrl } from '../services/oauth.service.js';
 
 /**
  * Register a new user.
@@ -121,4 +121,14 @@ export const getMe = asyncHandler(async (req, res) => {
 export const getOAuthProvidersList = asyncHandler(async (req, res) => {
   const providers = getOAuthProviders();
   apiResponse(res, httpStatus.OK, 'OAuth providers retrieved', { providers });
+});
+
+/**
+ * Initiate Google OAuth flow by redirecting to Google's auth URL.
+ *
+ * @route GET /api/v1/auth/oauth/google
+ */
+export const googleOAuth = asyncHandler(async (req, res) => {
+  const url = getGoogleOAuthUrl();
+  res.redirect(url);
 });

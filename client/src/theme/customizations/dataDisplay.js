@@ -1,5 +1,5 @@
 /**
- * @file Theme overrides for data display components.
+ * @module customizations/dataDisplay
  */
 import { alpha } from "@mui/material/styles";
 import { svgIconClasses } from "@mui/material/SvgIcon";

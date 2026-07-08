@@ -8,6 +8,10 @@ import * as authApi from '../services/authApi.js';
 
 /**
  * Register a new user.
+ *
+ * @param {object} data - Registration payload (name, email, password)
+ * @param {object} thunkAPI
+ * @returns {Promise<object>}
  */
 export const register = createAsyncThunk('auth/register', async (data, { rejectWithValue }) => {
   try {
@@ -20,6 +24,10 @@ export const register = createAsyncThunk('auth/register', async (data, { rejectW
 
 /**
  * Login with email and password.
+ *
+ * @param {object} data - Login payload (email, password)
+ * @param {object} thunkAPI
+ * @returns {Promise<object>}
  */
 export const login = createAsyncThunk('auth/login', async (data, { rejectWithValue }) => {
   try {
@@ -34,6 +42,8 @@ export const login = createAsyncThunk('auth/login', async (data, { rejectWithVal
  * Logout the current user.
  *
  * Clears local state even if the API call fails (best-effort logout).
+ *
+ * @returns {Promise<void>}
  */
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
@@ -45,6 +55,8 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 
 /**
  * Fetch the currently authenticated user (used on app start).
+ *
+ * @returns {Promise<object>}
  */
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
   try {

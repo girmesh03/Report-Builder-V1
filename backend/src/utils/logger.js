@@ -3,6 +3,7 @@
  *
  * @module utils/logger
  */
+import env from '../config/env.js';
 
 const LOG_LEVELS = Object.freeze({
   ERROR: 'error',
@@ -11,7 +12,7 @@ const LOG_LEVELS = Object.freeze({
   DEBUG: 'debug',
 });
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = env.NODE_ENV === 'development';
 
 /**
  * @param {string} level - Log level

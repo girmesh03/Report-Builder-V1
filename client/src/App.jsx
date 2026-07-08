@@ -10,11 +10,14 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Outlet } from 'react-router';
 import CssBaseline from '@mui/material/CssBaseline';
-import AppTheme from './theme/AppTheme.jsx';
+import AppThemeProvider from './providers/AppThemeProvider.jsx';
 import AppErrorBoundary from './components/feedback/AppErrorBoundary.jsx';
 import AppToastContainer from './components/feedback/AppToastContainer.jsx';
 import { fetchCurrentUser } from './store/authSlice.js';
 
+/**
+ * @returns {JSX.Element}
+ */
 function App() {
   const dispatch = useDispatch();
 
@@ -23,13 +26,13 @@ function App() {
   }, [dispatch]);
 
   return (
-    <AppTheme>
+    <AppThemeProvider>
       <CssBaseline />
       <AppErrorBoundary>
         <AppToastContainer />
         <Outlet />
       </AppErrorBoundary>
-    </AppTheme>
+    </AppThemeProvider>
   );
 }
 

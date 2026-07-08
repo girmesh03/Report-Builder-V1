@@ -22,6 +22,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import MuiTextField from '../../components/reusable/MuiTextField.jsx';
 import MuiPasswordField from '../../components/reusable/MuiPasswordField.jsx';
+import CircularProgress from '@mui/material/CircularProgress';
 import MuiButton from '../../components/reusable/MuiButton.jsx';
 import MuiCard from '../../components/reusable/MuiCard.jsx';
 import { login, clearError } from '../../store/authSlice.js';
@@ -119,10 +120,12 @@ function LoginPage() {
             fullWidth
             variant="contained"
             size="small"
-            disabled={loading}
+            loading={loading}
+            loadingIndicator={<CircularProgress size={20} />}
+            loadingPosition="center"
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            Sign in
           </MuiButton>
         </form>
 

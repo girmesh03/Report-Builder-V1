@@ -14,14 +14,14 @@ import rateLimit from 'express-rate-limit';
 import env from '../config/env.js';
 import constants from '../utils/constants.js';
 
-/** General rate limiter */
+/** @type {import('express-rate-limit').RateLimitRequestHandler} */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Too many requests, please try again later.',
 });
 
-/** Stricter rate limiter for auth routes */
+/** @type {import('express-rate-limit').RateLimitRequestHandler} */
 const authLimiter = rateLimit({
   windowMs: constants.AUTH_RATE_LIMIT.WINDOW_MS,
   max: constants.AUTH_RATE_LIMIT.MAX,

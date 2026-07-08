@@ -110,15 +110,15 @@ client/
         **MuiPasswordField.jsx**
         **MuiButton.jsx**
         **MuiCard.jsx**
+        **MuiSelect.jsx**
+        **MuiDatePicker.jsx**
+        **MuiDialog.jsx**
+        **MuiDataGrid.jsx**
+        **MuiPageHeader.jsx**
+        **MuiEmptyState.jsx**
+        **MuiLoadingState.jsx**
+        **MuiErrorState.jsx**
         MuiIconButton.jsx    (future)
-        MuiSelect.jsx        (future)
-        MuiDatePicker.jsx    (future)
-        MuiDialog.jsx        (future)
-        MuiDataGrid.jsx      (future)
-        MuiPageHeader.jsx    (future)
-        MuiEmptyState.jsx    (future)
-        MuiLoadingState.jsx  (future)
-        MuiErrorState.jsx    (future)
     pages/
       public/         **Landing page**
       auth/           **Login, register, OAuth callback**
@@ -127,7 +127,7 @@ client/
       reports/        Reports list/grid page with search, filter, pagination
       errors/         **404 page**
     hooks/            Custom hooks (useAudioRecorder)
-    providers/        App-level providers (future)
+    providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
     routes/           **Route guards (ProtectedRoute)**
     services/         **API client, auth API**
     store/            **Redux store and auth slice**
@@ -143,11 +143,11 @@ client/
 - Tree-shaking MUI imports (`import TextField from '@mui/material/TextField'`).
 - `sx` and `styled()` for styling; no Tailwind.
 - `react-hook-form` with `register`; no `watch` or `Controller` unless documented with a code comment.
-- `forwardRef` on all reusable MUI wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard).
+- `forwardRef` on all reusable MUI input wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid). Non-input wrappers (MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState) do not require forwardRef.
 - MUI Grid uses `size` prop (not `item`).
 - No deprecated MUI props: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`.
-- App.jsx serves as root layout: AppTheme, CssBaseline, AppErrorBoundary, AppToastContainer, `<Outlet />`, and `useEffect` dispatching `fetchCurrentUser()` on mount.
-- Auth pages (LoginPage, RegisterPage) use MuiCard + MuiTextField + MuiPasswordField from `components/reusable/`. MuiPasswordField has eye toggle for show/hide — `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift.
+- App.jsx serves as root layout: AppThemeProvider, CssBaseline, AppErrorBoundary, AppToastContainer, `<Outlet />`, and `useEffect` dispatching `fetchCurrentUser()` on mount.
+- Auth pages (LoginPage, RegisterPage) use MuiCard + MuiTextField + MuiPasswordField from `components/reusable/`. Submit buttons use MuiButton with native `loading`, `loadingIndicator={<CircularProgress size={20} />}`, and `loadingPosition="center"`. MuiPasswordField has eye toggle for show/hide — `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift.
 - PublicLayout provides fixed AppBar + scrollable content area: outer `height: 100vh; overflow: hidden`, AppBar fixed, content `overflow-y: auto`. PublicAppBar includes logo (clickable → `/`) and dark/light theme toggle via `useColorScheme`.
 - ProtectedRoute shows loading spinner during auth initialisation, redirects to /login with `state.from` if not authenticated.
 - apiClient uses `VITE_API_BASE_URL` with `credentials: "include"`. On 401, attempts `/auth/refresh` via direct `fetch` (not apiClient, avoids circular dependency); refresh success retries original request, refresh failure throws `SESSION_EXPIRED` which dispatches `clearAuth`. Login/register/refresh/logout excluded from 401 handling.
@@ -196,7 +196,7 @@ MUI theme configuration files are located in `client/src/theme/`. The theme defi
 - `customizations/` — component-level style overrides for inputs, data display, feedback, navigation, surfaces, charts, data grid, and date pickers.
 - `AppTheme.jsx` — composes the full MUI theme using `createTheme` with `cssVariables`, color schemes, and all customizations.
 
-The theme is consumed through `client/src/providers/AppThemeProvider.jsx`, which wraps `AppTheme` and is wired in `App.jsx`. This separation keeps the raw theme config distinct from the application's provider layer.
+The theme is consumed through `client/src/providers/AppThemeProvider.jsx`, which wraps `AppTheme` and is wired in `App.jsx`. The `LocalizationProvider` with `AdapterDayjs` wraps the router in `main.jsx`, making date picker localization available app-wide.
 
 ## MongoDB Compass Setup
 

@@ -50,7 +50,7 @@ export const authenticate = async (req, res, next) => {
  * Must be used after `authenticate` middleware.
  *
  * @param  {...string} roles - Allowed roles
- * @returns {function} Express middleware
+ * @returns {import('express').RequestHandler} Express middleware
  */
 export const authorize = (...roles) => {
   return (req, res, next) => {

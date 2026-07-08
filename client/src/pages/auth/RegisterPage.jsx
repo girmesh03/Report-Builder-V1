@@ -6,24 +6,28 @@
  *
  * @module pages/auth/RegisterPage
  */
-import { useNavigate } from 'react-router';
-import { useDispatch, useSelector } from 'react-redux';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Link from '@mui/material/Link';
-import InputAdornment from '@mui/material/InputAdornment';
-import PersonIcon from '@mui/icons-material/Person';
-import EmailIcon from '@mui/icons-material/Email';
-import LockIcon from '@mui/icons-material/Lock';
-import MuiTextField from '../../components/reusable/MuiTextField.jsx';
-import MuiPasswordField from '../../components/reusable/MuiPasswordField.jsx';
-import MuiButton from '../../components/reusable/MuiButton.jsx';
-import MuiCard from '../../components/reusable/MuiCard.jsx';
-import { register as registerAction, clearError } from '../../store/authSlice.js';
-import { ROUTE_PATHS } from '../../utils/routePaths.js';
+import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import Link from "@mui/material/Link";
+import InputAdornment from "@mui/material/InputAdornment";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import MuiTextField from "../../components/reusable/MuiTextField.jsx";
+import MuiPasswordField from "../../components/reusable/MuiPasswordField.jsx";
+import CircularProgress from "@mui/material/CircularProgress";
+import MuiButton from "../../components/reusable/MuiButton.jsx";
+import MuiCard from "../../components/reusable/MuiCard.jsx";
+import {
+  register as registerAction,
+  clearError,
+} from "../../store/authSlice.js";
+import { ROUTE_PATHS } from "../../utils/routePaths.js";
 
 /**
  * @returns {JSX.Element}
@@ -32,20 +36,28 @@ function RegisterPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm();
 
   const onSubmit = async (data) => {
     dispatch(clearError());
     const result = await dispatch(registerAction(data));
-    if (result.meta.requestStatus === 'fulfilled') {
-      toast.success('Registration successful');
+    if (result.meta.requestStatus === "fulfilled") {
+      toast.success("Registration successful");
       navigate(ROUTE_PATHS.DASHBOARD);
     }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', py: 4 }}>
-      <MuiCard sx={{ maxWidth: 480, mx: 'auto' }}>
+    <Container
+      maxWidth="sm"
+      sx={{ flexGrow: 1, display: "flex", alignItems: "center", py: 4 }}
+    >
+      <MuiCard sx={{ maxWidth: 480, mx: "auto" }}>
         <Typography variant="h4" gutterBottom fontWeight={600}>
           Create account
         </Typography>
@@ -74,9 +86,12 @@ function RegisterPage() {
                 ),
               },
             }}
-            {...register('name', {
-              required: 'Name is required',
-              minLength: { value: 2, message: 'Name must be at least 2 characters' },
+            {...register("name", {
+              required: "Name is required",
+              minLength: {
+                value: 2,
+                message: "Name must be at least 2 characters",
+              },
             })}
             error={!!errors.name}
             helperText={errors.name?.message}
@@ -96,9 +111,12 @@ function RegisterPage() {
                 ),
               },
             }}
-            {...register('email', {
-              required: 'Email is required',
-              pattern: { value: /^\S+@\S+$/i, message: 'Invalid email address' },
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^\S+@\S+$/i,
+                message: "Invalid email address",
+              },
             })}
             error={!!errors.email}
             helperText={errors.email?.message}
@@ -117,9 +135,12 @@ function RegisterPage() {
                 ),
               },
             }}
-            {...register('password', {
-              required: 'Password is required',
-              minLength: { value: 8, message: 'Password must be at least 8 characters' },
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 8,
+                message: "Password must be at least 8 characters",
+              },
             })}
             error={!!errors.password}
             helperText={errors.password?.message}
@@ -137,9 +158,10 @@ function RegisterPage() {
                 ),
               },
             }}
-            {...register('confirmPassword', {
-              required: 'Please confirm your password',
-              validate: (value) => value === getValues('password') || 'Passwords do not match',
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (value) =>
+                value === getValues("password") || "Passwords do not match",
             })}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
@@ -149,17 +171,19 @@ function RegisterPage() {
             fullWidth
             variant="contained"
             size="small"
-            disabled={loading}
+            loading={loading}
+            loadingIndicator={<CircularProgress size={20} />}
+            loadingPosition="center"
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? 'Creating account...' : 'Create account'}
+            Create account
           </MuiButton>
         </form>
 
         <Typography variant="body2" align="center">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link
-            slots={{ root: 'button' }}
+            slots={{ root: "button" }}
             type="button"
             variant="body2"
             onClick={() => navigate(ROUTE_PATHS.LOGIN)}
