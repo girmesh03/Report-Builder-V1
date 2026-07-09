@@ -5,51 +5,41 @@
  */
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
-import User from '../models/user.model.js';
 import apiResponse from '../utils/apiResponse.js';
-import ApiError from '../utils/apiError.js';
 import httpStatus from '../utils/httpStatus.js';
+import * as profileService from '../services/profile.service.js';
 
 /**
  * Get the current user's profile.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
  * @route GET /api/v1/profile
  */
 export const getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  apiResponse(res, httpStatus.OK, 'Profile retrieved', user.toPublicProfile());
+  const profile = await profileService.getProfile(req.user._id.toString());
+  apiResponse(res, httpStatus.OK, 'Profile retrieved', profile);
 });
 
 /**
  * Update profile fields (name, phone, avatarUrl).
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
  * @route PATCH /api/v1/profile
  */
 export const updateProfile = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-
-    const allowedFields = ['name', 'phone', 'avatarUrl'];
-    const updates = {};
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    }
-
-    if (Object.keys(updates).length === 0) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'No valid fields to update');
-    }
-
-    const user = await User.findByIdAndUpdate(req.user._id, updates, {
-      new: true,
-      runValidators: true,
-      session,
-    });
-
+    const profile = await profileService.updateProfile(
+      req.user._id.toString(),
+      req.body,
+      { session },
+    );
     await session.commitTransaction();
-    apiResponse(res, httpStatus.OK, 'Profile updated', user.toPublicProfile());
+    apiResponse(res, httpStatus.OK, 'Profile updated', profile);
   } catch (error) {
     await session.abortTransaction();
     next(error);
@@ -61,22 +51,21 @@ export const updateProfile = asyncHandler(async (req, res, next) => {
 /**
  * Change password.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
  * @route PATCH /api/v1/profile/password
  */
 export const changePassword = asyncHandler(async (req, res, next) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-
-    const user = await User.findById(req.user._id).session(session);
-    const isMatch = await user.comparePassword(req.body.currentPassword);
-    if (!isMatch) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Current password is incorrect');
-    }
-
-    user.passwordHash = req.body.newPassword;
-    await user.save({ session });
-
+    await profileService.changePassword(
+      req.user._id.toString(),
+      req.body.currentPassword,
+      req.body.newPassword,
+      { session },
+    );
     await session.commitTransaction();
     apiResponse(res, httpStatus.OK, 'Password changed successfully');
   } catch (error) {

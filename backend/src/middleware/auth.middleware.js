@@ -19,7 +19,7 @@ import httpStatus from '../utils/httpStatus.js';
  * @returns {Promise<void>}
  * @throws {ApiError} 401 if token is missing, invalid, or user not found
  */
-export const authenticate = async (req, res, next) => {
+export const authenticate = async (req, _res, next) => {
   try {
     const token = req.cookies?.accessToken;
     if (!token) {
@@ -53,7 +53,7 @@ export const authenticate = async (req, res, next) => {
  * @returns {import('express').RequestHandler} Express middleware
  */
 export const authorize = (...roles) => {
-  return (req, res, next) => {
+  return (req, _res, next) => {
     if (!req.user) {
       return next(new ApiError(httpStatus.UNAUTHORIZED, 'Authentication required'));
     }

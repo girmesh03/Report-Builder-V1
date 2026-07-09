@@ -24,6 +24,42 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 5. Ensure MongoDB is running on `localhost:27017`.
 6. Run `npm run dev:backend` (port 4000) and `npm run dev:client` (port 3000).
 
+## Mock Data
+
+```bash
+node backend/mock/index.js --inject   # Seed 2 supervisors, 14 branches, 11 reports
+node backend/mock/index.js --wipe     # Drop all collections (development only)
+```
+
+## API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/v1/health` | No | Basic health check |
+| GET | `/api/v1/health/db` | No | Database connectivity |
+| POST | `/api/v1/auth/register` | No | Register new user |
+| POST | `/api/v1/auth/login` | No | Login |
+| POST | `/api/v1/auth/logout` | No | Clear auth cookies |
+| POST | `/api/v1/auth/refresh` | No | Rotate tokens |
+| GET | `/api/v1/auth/me` | Yes | Current user profile |
+| GET | `/api/v1/auth/oauth/providers` | No | List OAuth providers |
+| GET | `/api/v1/auth/oauth/google` | No | Google OAuth redirect |
+| GET | `/api/v1/profile` | Yes | Get profile |
+| PATCH | `/api/v1/profile` | Yes | Update name/phone/avatar |
+| PATCH | `/api/v1/profile/password` | Yes | Change password |
+| GET | `/api/v1/branches` | Yes | List branches (paginated) |
+| GET | `/api/v1/branches/:id` | Yes | Get branch |
+| POST | `/api/v1/branches` | Yes | Create branch |
+| PATCH | `/api/v1/branches/:id` | Yes | Update branch |
+| DELETE | `/api/v1/branches/:id` | Yes | Deactivate branch |
+| GET | `/api/v1/reports` | Yes | List reports (paginated) |
+| GET | `/api/v1/reports/monthly` | Yes | Monthly compilation |
+| GET | `/api/v1/reports/export` | Yes | Date-range export |
+| GET | `/api/v1/reports/:id` | Yes | Get report |
+| POST | `/api/v1/reports` | Yes | Create draft report |
+| PATCH | `/api/v1/reports/:id` | Yes | Update report |
+| DELETE | `/api/v1/reports/:id` | Yes | Delete draft only |
+
 ## Frontend Routes
 
 | Path | Page | Access |
@@ -39,4 +75,10 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 
 ## Development Phases
 
-The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–6 complete.
+The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`.
+
+**Status:** Phases 1–7 complete. Phase 7 built branch/report CRUD, mock data system, monthly/export endpoints. Audit-driven fixes applied across backend (unused imports, JSDoc compliance, controller delegation, dead code removal).
+
+## Validation
+
+All project rules, conventions, and decisions are consolidated in [`docs/RULES.md`](./docs/RULES.md) for cross-phase validation.

@@ -12,12 +12,12 @@ import logger from '../utils/logger.js';
 
 /**
  * @param {ApiError|Error} err - Error object
- * @param {import('express').Request} req - Express request
+ * @param {import('express').Request} _req - Express request (unused)
  * @param {import('express').Response} res - Express response
- * @param {import('express').NextFunction} next - Express next function
+ * @param {import('express').NextFunction} _next - Express next function (unused)
  * @returns {void}
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, _req, res, _next) => {
   const statusCode = err.statusCode || httpStatus.INTERNAL_SERVER_ERROR;
   const message = err.isOperational ? err.message : 'Internal server error';
 

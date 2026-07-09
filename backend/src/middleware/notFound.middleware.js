@@ -14,7 +14,7 @@ import ApiError from '../utils/apiError.js';
  * @param {import('express').NextFunction} next - Express next function
  * @returns {void}
  */
-const notFound = (req, res, next) => {
+const notFound = (req, _res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, `Route not found: ${req.originalUrl}`));
 };
 

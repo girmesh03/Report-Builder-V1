@@ -21,6 +21,9 @@ import { getOAuthProviders, getGoogleOAuthUrl } from '../services/oauth.service.
  *
  * Sets access and refresh tokens as httpOnly cookies.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
  * @route POST /api/v1/auth/register
  */
 export const register = asyncHandler(async (req, res, next) => {
@@ -49,6 +52,9 @@ export const register = asyncHandler(async (req, res, next) => {
  *
  * Sets access and refresh tokens as httpOnly cookies.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
  * @route POST /api/v1/auth/login
  */
 export const login = asyncHandler(async (req, res, next) => {
@@ -69,9 +75,11 @@ export const login = asyncHandler(async (req, res, next) => {
 /**
  * Logout by clearing auth cookies.
  *
+ * @param {import('express').Request} _req - Express request (unused)
+ * @param {import('express').Response} res - Express response
  * @route POST /api/v1/auth/logout
  */
-export const logout = asyncHandler(async (req, res) => {
+export const logout = asyncHandler(async (_req, res) => {
   const clearCookies = buildClearCookieOptions();
   clearCookies.forEach(({ name, value, options }) => {
     res.cookie(name, value, options);
@@ -82,6 +90,9 @@ export const logout = asyncHandler(async (req, res) => {
 /**
  * Refresh access token using refresh token cookie.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
  * @route POST /api/v1/auth/refresh
  */
 export const refresh = asyncHandler(async (req, res, next) => {
@@ -107,6 +118,8 @@ export const refresh = asyncHandler(async (req, res, next) => {
 /**
  * Get the currently authenticated user's profile.
  *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
  * @route GET /api/v1/auth/me
  */
 export const getMe = asyncHandler(async (req, res) => {
@@ -116,9 +129,11 @@ export const getMe = asyncHandler(async (req, res) => {
 /**
  * Get the list of configured OAuth providers.
  *
+ * @param {import('express').Request} _req - Express request (unused)
+ * @param {import('express').Response} res - Express response
  * @route GET /api/v1/auth/oauth/providers
  */
-export const getOAuthProvidersList = asyncHandler(async (req, res) => {
+export const getOAuthProvidersList = asyncHandler(async (_req, res) => {
   const providers = getOAuthProviders();
   apiResponse(res, httpStatus.OK, 'OAuth providers retrieved', { providers });
 });
@@ -126,9 +141,11 @@ export const getOAuthProvidersList = asyncHandler(async (req, res) => {
 /**
  * Initiate Google OAuth flow by redirecting to Google's auth URL.
  *
+ * @param {import('express').Request} _req - Express request (unused)
+ * @param {import('express').Response} res - Express response
  * @route GET /api/v1/auth/oauth/google
  */
-export const googleOAuth = asyncHandler(async (req, res) => {
+export const googleOAuth = asyncHandler(async (_req, res) => {
   const url = getGoogleOAuthUrl();
   res.redirect(url);
 });

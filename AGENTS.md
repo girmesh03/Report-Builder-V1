@@ -2,9 +2,17 @@
 
 ## Project State
 
-Phases 1-6 complete. Phase 5 audit-driven fixes applied across backend and client. Backend all-clean: graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env. Client all-clean: AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file, AppTheme.jsx uses @module. All backend and client files pass syntax validation and builds.
+Phases 1-7 complete. Phase 5 audit-driven fixes applied across backend and client. Phase 7 audit fixed 5 critical violations (broken status refs in report.service.js, hardcoded GENERAL_RATE_LIMIT, dead REPORT.TITLE_* constants, profile.controller delegation violation, unused validator package). Post-audit cleanup resolved 21+ additional violations across 9+ files.
+
+**Backend all-clean:** graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env, no unused imports (bcrypt removed from mock/index.js), no unused parameters (all unused params prefixed with `_`), no dead code (oauthAccount.model.js removed, logger.debug removed, validator package removed), all JSDoc `@param`/`@returns`/`@throws` complete on all controllers/services. `GENERAL_RATE_LIMIT` constant added. Profile controller delegates to profile.service.js. backend/mock/index.js uses `ordered: true` for Report.create batch. All 31 backend source files pass `node --check`.
+
+**Client all-clean:** AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file, AppTheme.jsx uses @module. All 48 client files pass build.
 
 Phase 6 built: AppShell (responsive sidebar with logout at bottom + Divider, top bar with dynamic page title + user menu, scrollable content area), DashboardPage (summary stat cards + recent activity placeholder), ProfilePage (two-column: personal info form + change password form, react-hook-form with register, Mui wrappers), ReportsPlaceholderPage, profileApi/profileSlice (fetchProfile, updateProfile, changePassword), PublicRoute guard (inverse — redirects authenticated users from public auth pages to /dashboard), PublicAppBar logo navigates to /dashboard if authenticated else /.
+
+Phase 7 built: Branch model (name enum from BRANCH_NAMES constant — 14 predefined Amharic names) + Report model with embedded schemas (audioClips, transcription, generatedReport, exportHistory), mongoose-paginate-v2, CRUD services/controllers/routes/validators, owner-scoped report access, backend/mock/index.js (--inject seeds 2 supervisors + 14 branches + 11 reports; --wipe drops all collections; both use MongoDB sessions). Branch schema field renamed from `area` to `branch`. Added `GET /api/v1/reports/monthly?year=&month=` for monthly compilation (dynamic statusCounts) and `GET /api/v1/reports/export?dateFrom=&dateTo=` for date-range export. `TASK_STATUS` constant (PENDING/ON_PROGRESS/COMPLETED) added to constants.js for future task-level status system. `GENERAL_RATE_LIMIT` constant added.
+
+Consolidated validation document created at `docs/RULES.md` — 28 categories, ~280 rules extracted from every line of every document in `docs/`.
 
 ## Core Identity
 
@@ -37,14 +45,14 @@ Each phase follows **exactly 6 steps in order**:
 ## Git Conventions
 
 - Feature branches: `phase-N-description` (e.g. `phase-3-authentication-profile-api`)
-- Commits: `feat: phase N description`
+- Commits: `feat: phase N description`, `chore: phase N description` for hardening
 - Each phase merges into `main` after approval, then branch is deleted
 - No direct commits to `main`
 
 ## Backend Conventions
 
 - `express-async-handler` wraps all controllers → errors forwarded via `next(error)` (ADR-004)
-- Write controllers use `try/catch/finally` with MongoDB sessions/transactions (register, updateProfile, changePassword)
+- Write controllers use `try/catch/finally` with MongoDB sessions/transactions (register, updateProfile, changePassword, createReport, updateReport, deleteReport, createBranch, updateBranch, deactivateBranch)
 - `authenticate` middleware extracts JWT from `req.cookies.accessToken` (httpOnly), verifies via `token.service`, attaches `req.user` (user doc without passwordHash)
 - `authorize(...roles)` middleware checks `req.user.role` — returns 403 if not in allowed roles
 - `mongoose-paginate-v2` for paginated list endpoints (default page: 1, limit: 10, max: 100)
@@ -54,7 +62,7 @@ Each phase follows **exactly 6 steps in order**:
 - `express-validator` rules in `validators/*.js`, results checked via `validate.middleware.js` (422 on failure)
 - httpOnly cookie options: access token scoped to `/api/v1` (15m), refresh token scoped to `/api/v1/auth` (7d) (ADR-002)
 - OAuth-ready architecture with provider-neutral service stub (`oauth.service.js`); Google placeholder until credentials set
-- JSDoc on all public modules, functions, controllers, services, models
+- JSDoc on all public modules, functions, controllers, services, models — `@param`, `@returns`, `@throws` where applicable
 - Safe logging — no passwords, tokens, raw cookies, or secrets in logs
 - Standardized response: `apiResponse(res, statusCode, message, data?)` — never ad-hoc JSON shapes
 - Standardized error: `throw new ApiError(statusCode, message)` — never raw throw
@@ -62,6 +70,8 @@ Each phase follows **exactly 6 steps in order**:
 - Route aggregation: all routes mounted in `routes/index.js`, registered via `app.use('/api/v1', indexRouter)`
 - Graceful shutdown on SIGINT/SIGTERM — server closes → mongoose closes → exit
 - Controllers delegate to services: controllers handle HTTP, services handle business logic/DB
+- Unused parameters prefixed with `_` (e.g., `_req`, `_res`, `_next`)
+- No unused imports — every import must be referenced in file body
 
 ## Frontend Conventions
 
@@ -80,6 +90,7 @@ Each phase follows **exactly 6 steps in order**:
 - **AppSidebar logout placement**: Logout ListItemButton at bottom of sidebar, separated by Divider, pushed down by `justifyContent: 'space-between'` on a flex container wrapping nav items and logout section.
 - **401→refresh→retry in apiClient**: direct `fetch` for refresh (not apiClient, avoids circular dep); `SESSION_EXPIRED` on refresh failure dispatches `clearAuth`; login/register/refresh/logout excluded from 401 handling
 - **StrictMode double-fetch is normal**: React `<StrictMode>` in `main.jsx` double-invokes effects in dev — `fetchCurrentUser` fires twice on refresh. Production fires once. Do NOT remove StrictMode.
+- Theme-aware `sx`: use `color: 'text.secondary'`, `bgcolor: 'background.paper'` — never import from `themePrimitives.js` directly
 
 ## Critical Package Decisions
 
@@ -92,6 +103,7 @@ Each phase follows **exactly 6 steps in order**:
 | No frontend `dotenv` | Vite already loads `VITE_`-prefixed env vars |
 | Native `fetch` (no axios) | Sufficient for both backend and frontend |
 | No automated tests | Explicitly excluded from initial scope |
+| `validator` package removed | Never imported anywhere in backend source |
 
 ## Key Environment Variables
 
@@ -119,4 +131,6 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/phases/phase-1-summary.md` through `docs/phases/phase-16-summary.md` — per-phase implementation records
 - `docs/phase-1-4-validation.md` — validated alignment between docs and implemented code for phases 1-4
 - `docs/phase-1-6-validation.md` — validation report covering phases 1-6 (backend + client alignment audit)
+- `docs/phases/phase-7-summary.md` — Phase 7 implementation record (branch/report models, CRUD, mock data, monthly report, export)
+- **`docs/RULES.md`** — consolidated rulebook (~280 rules across 28 categories, extracted from every line of every document)
 - `AGENTS.md` — this file (project state, conventions, protocol)

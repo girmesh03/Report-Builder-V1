@@ -20,7 +20,6 @@
 | mongoose                 | MongoDB ODM                                       |
 | mongoose-paginate-v2     | Pagination plugin                                 |
 | multer                   | Multipart file upload (audio)                     |
-| validator                | String validation helpers                         |
 
 ## Backend Dev Packages
 

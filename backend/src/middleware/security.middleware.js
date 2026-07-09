@@ -16,9 +16,9 @@ import constants from '../utils/constants.js';
 
 /** @type {import('express-rate-limit').RateLimitRequestHandler} */
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests, please try again later.',
+  windowMs: constants.GENERAL_RATE_LIMIT.WINDOW_MS,
+  max: constants.GENERAL_RATE_LIMIT.MAX,
+  message: constants.GENERAL_RATE_LIMIT.MESSAGE,
 });
 
 /** @type {import('express-rate-limit').RateLimitRequestHandler} */

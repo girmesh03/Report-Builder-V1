@@ -12,6 +12,7 @@ const constants = Object.freeze({
   ROLES: Object.freeze({
     USER: 'user',
     ADMIN: 'admin',
+    AREA_SUPERVISOR: 'area_supervisor',
   }),
 
   AUTH: Object.freeze({
@@ -24,6 +25,12 @@ const constants = Object.freeze({
   AUTH_RATE_LIMIT: Object.freeze({
     WINDOW_MS: 15 * 60 * 1000,
     MAX: 20,
+    MESSAGE: 'Too many requests, please try again later.',
+  }),
+
+  GENERAL_RATE_LIMIT: Object.freeze({
+    WINDOW_MS: 15 * 60 * 1000,
+    MAX: 100,
     MESSAGE: 'Too many requests, please try again later.',
   }),
 
@@ -43,17 +50,34 @@ const constants = Object.freeze({
     EXPORTED: 'exported',
   }),
 
+  TASK_STATUS: Object.freeze({
+    PENDING: 'pending',
+    ON_PROGRESS: 'on_progress',
+    COMPLETED: 'completed',
+  }),
+
   BRANCH: Object.freeze({
-    NAME_MIN_LENGTH: 2,
-    NAME_MAX_LENGTH: 100,
     CODE_MIN_LENGTH: 2,
     CODE_MAX_LENGTH: 20,
   }),
 
-  REPORT: Object.freeze({
-    TITLE_MIN_LENGTH: 2,
-    TITLE_MAX_LENGTH: 200,
-  }),
+  BRANCH_NAMES: Object.freeze([
+    'ብስራተ ገብርኤል',
+    'ቡልቡላ',
+    'መስቀል ፍላወር',
+    'ጎላጎል',
+    'ጀሞ ሚካኤል',
+    'ሳር ቤት',
+    'ቤተል',
+    '4 ኪሎ',
+    'ሰሚት',
+    'ኤርፖርት',
+    'ሲኤምሲ',
+    'ቱሉ ዲምቱ',
+    'ወዳጅነት ፓርክ',
+    'መድኃኔዓለም',
+  ]),
+
 });
 
 export default constants;

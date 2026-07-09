@@ -41,7 +41,7 @@ Branch model:
 
 - name
 - code
-- area
+- branch
 - address
 - managerName
 - managerPhone

@@ -9,7 +9,6 @@ const LOG_LEVELS = Object.freeze({
   ERROR: 'error',
   WARN: 'warn',
   INFO: 'info',
-  DEBUG: 'debug',
 });
 
 const isDev = env.NODE_ENV === 'development';
@@ -35,7 +34,6 @@ const logger = Object.freeze({
   error: (message, meta) => log(LOG_LEVELS.ERROR, message, meta),
   warn: (message, meta) => log(LOG_LEVELS.WARN, message, meta),
   info: (message, meta) => log(LOG_LEVELS.INFO, message, meta),
-  debug: (message, meta) => log(LOG_LEVELS.DEBUG, message, meta),
 });
 
 export default logger;

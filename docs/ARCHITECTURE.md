@@ -28,8 +28,8 @@ backend/
       **health.controller.js   Health check endpoints**
       **auth.controller.js     Auth endpoints (register, login, logout, refresh, me, OAuth)**
       **profile.controller.js  Profile endpoints (get, update, change password)**
-      branch.controller.js   Branch CRUD with pagination and soft deactivation
-      report.controller.js   Report CRUD with pagination and user ownership
+      **branch.controller.js   Branch CRUD with pagination and soft deactivation**
+      **report.controller.js   Report CRUD with pagination and user ownership (plus monthly report compilation, date-range export)**
     middleware/
       **security.middleware.js      Helmet, cors, compression, cookie-parser,
                                   mongo-sanitize, rate-limit**
@@ -40,22 +40,22 @@ backend/
       **validate.middleware.js      express-validator result handler**
     models/
       **user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)**
-      **oauthAccount.model.js  OAuth account schema (user, provider, providerAccountId)**
-      branch.model.js     Branch schema (name, code, area, address, managerName, managerPhone, isActive)
-      report.model.js     Report schema (user, reportDate, title, branches, status, audio, transcription, generation)
+      **branch.model.js     Branch schema (name, code, branch, address, managerName, managerPhone, isActive)**
+      **report.model.js     Report schema (user, reportDate, branches, status, supervisorName, audioClips, transcription, reviewedTranscription, generatedReport, editedReport, exportHistory)**
     routes/
       **index.js          Route aggregator**
       **health.routes.js  Health check route definitions**
       **auth.routes.js    Auth route definitions**
       **profile.routes.js Profile route definitions**
-      branch.routes.js  Branch route definitions (all authenticated)
-      report.routes.js  Report route definitions (all authenticated, ownership enforced)
+      **branch.routes.js  Branch route definitions (all authenticated)**
+      **report.routes.js  Report route definitions (all authenticated, ownership enforced) — list, get, create, update, delete, monthly, export**
     services/
       **auth.service.js   Auth business logic (register, login, refresh)**
       **token.service.js  JWT access and refresh token generation/verification**
       **oauth.service.js  OAuth provider config and provider list**
-      branch.service.js Branch CRUD with pagination, search, and soft deactivation
-      report.service.js Report CRUD with pagination, filtering, and user ownership
+      **profile.service.js Profile business logic (get, update, change password)**
+      **branch.service.js Branch CRUD with pagination, search, and soft deactivation**
+      **report.service.js Report CRUD with pagination, filtering, user ownership, monthly compilation, date-range export**
     utils/
       **constants.js      Centralized constants (no magic values elsewhere)**
       **httpStatus.js     HTTP status code constants**
@@ -66,8 +66,10 @@ backend/
     validators/
       **auth.validators.js    express-validator rules for register and login**
       **profile.validators.js express-validator rules for profile update and password change**
-      branch.validators.js  express-validator rules for branch create and update
-      report.validators.js  express-validator rules for report create and update
+      **branch.validators.js  express-validator rules for branch create and update**
+      **report.validators.js  express-validator rules for report create and update**
+  mock/
+    **index.js            Mock data injector/wiper (development only)**
   .env
   package.json
 ```
@@ -76,7 +78,7 @@ backend/
 - `express-async-handler` wraps all controllers and forwards errors to the global handler.
 - All write controllers use try/catch/finally with MongoDB sessions/transactions. Every write endpoint follows `mongoose.startSession()` → `session.startTransaction()` → write → `session.commitTransaction()` / `session.abortTransaction()` → `session.endSession()` in `finally`.
 - `mongoose-paginate-v2` for pagination on Branch and Report list endpoints.
-- Centralized constants in `src/utils/constants.js` — no magic values elsewhere. Includes `BODY_PARSER_LIMIT`, `PHONE_MAX_LENGTH`, `ROLES`, `AUTH` (name/password limits), `AUTH_RATE_LIMIT`, `PAGINATION`, `REPORT_STATUS`, `BRANCH`, `REPORT`, and general config.
+- Centralized constants in `src/utils/constants.js` — no magic values elsewhere. Includes `BODY_PARSER_LIMIT`, `PHONE_MAX_LENGTH`, `ROLES`, `AUTH` (name/password limits), `AUTH_RATE_LIMIT`, `GENERAL_RATE_LIMIT`, `PAGINATION`, `REPORT_STATUS`, `TASK_STATUS`, `BRANCH`, and general config.
 - All config values accessed via the frozen `env` config object.
 - All public functions and modules documented with JSDoc (`@module`, `@param`, `@returns`, `@throws`).
 - express-validator with `normalizeEmail({ gmail_remove_dots: false })` on auth endpoints to preserve Gmail plus/dot addressing.
@@ -168,14 +170,14 @@ client/
 
 Over phases, these Mongoose models will be built:
 
-- **User** — name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt, timestamps
-- **Branch** — name, code, area, address, managerName, managerPhone, isActive, timestamps. Indexes: `{ code: 1 }` unique, `{ name: 1 }`.
-- **Report** — user, reportDate, title, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[], transcription, reviewedTranscription, generatedReport, editedReport, exportHistory[], timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`.
+- **User** — name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt, timestamps. ✅ Implemented
+- **Branch** — name (enum from BRANCH_NAMES constant), code, branch, address, managerName, managerPhone, isActive, timestamps. Indexes: `{ code: 1 }` unique, `{ name: 1 }`. ✅ Implemented
+- **Report** — user, reportDate, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[] (filename, mimeType, size, duration, storagePath), transcription (text, confidence, languageCode, requestId, billedDuration, status), reviewedTranscription, generatedReport (text, modelVersion, promptVersion, finishReason, inputTokens, outputTokens, status), editedReport, exportHistory[] (format, exportedAt, filename), timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`. Monthly compilation at `GET /api/v1/reports/monthly?year=&month=` and date-range export at `GET /api/v1/reports/export?dateFrom=&dateTo=`. ✅ Implemented
 - **AiGeneration** — report, provider, model, promptVersion, inputSnapshot, output, usageMetadata, finishReason, status
 
 ## Pagination
 
-Branch and Report list endpoints use `mongoose-paginate-v2` with `page`, `limit`, `sort`, `search`, and status/branch/date filters. Default page: 1, default limit: 10, max limit: 100. Defined in `backend/src/utils/constants.js` as `PAGINATION`.
+Branch and Report list endpoints use `mongoose-paginate-v2` with `page`, `limit`, `sort`, `search`, and status/branch/date filters. Default page: 1, default limit: 10, max limit: 100. Defined in `backend/src/utils/constants.js` as `PAGINATION`. ✅ Implemented in Phases 7.
 
 ## Addis AI Backend Proxy
 
@@ -206,3 +208,9 @@ The theme is consumed through `client/src/providers/AppThemeProvider.jsx`, which
 3. Connect to `mongodb://127.0.0.1:27017`.
 4. Database `report-builder-v1` is created automatically on first write.
 5. Collections: `users`, `branches`, `reports`, `aigenerations`.
+
+---
+
+## Validation Reference
+
+All architectural rules, coding conventions, and decision records are consolidated in **[`docs/RULES.md`](./RULES.md)** for cross-phase validation.
