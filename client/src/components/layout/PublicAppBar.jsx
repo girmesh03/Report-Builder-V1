@@ -7,6 +7,7 @@
  * @module components/layout/PublicAppBar
  */
 import { useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -23,16 +24,21 @@ import { useColorScheme } from '@mui/material/styles';
 function PublicAppBar() {
   const navigate = useNavigate();
   const { mode, setMode } = useColorScheme();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const toggleTheme = () => {
     setMode(mode === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleLogoClick = () => {
+    navigate(isAuthenticated ? '/dashboard' : '/');
   };
 
   return (
     <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
       <Toolbar>
         <Box
-          onClick={() => navigate('/')}
+          onClick={handleLogoClick}
           sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1, cursor: 'pointer' }}
         >
           <DescriptionIcon color="primary" sx={{ fontSize: 28 }} />

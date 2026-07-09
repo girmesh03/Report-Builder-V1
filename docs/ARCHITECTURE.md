@@ -104,7 +104,7 @@ client/
     components/
       audio/          Audio recorder, playback, controls, meter, guidelines
       feedback/       **Toast, error boundary**
-      layout/         **PublicLayout, PublicAppBar**, AppShell (AppSidebar, AppTopbar, AppContent)
+      layout/         **PublicLayout, PublicAppBar, AppShell, AppSidebar, AppTopbar, AppContent**
       reusable/       MUI wrappers prefixed Mui
         **MuiTextField.jsx**
         **MuiPasswordField.jsx**
@@ -122,15 +122,15 @@ client/
     pages/
       public/         **Landing page**
       auth/           **Login, register, OAuth callback**
-      dashboard/      Dashboard landing page
-      profile/        Profile view and edit page
-      reports/        Reports list/grid page with search, filter, pagination
+      dashboard/      **Dashboard landing page (summary cards + recent activity)**
+      profile/        **Profile view and edit page (personal info + change password)**
+      reports/        **Reports placeholder page** → Reports list/grid page with search, filter, pagination
       errors/         **404 page**
     hooks/            Custom hooks (useAudioRecorder)
     providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
-    routes/           **Route guards (ProtectedRoute)**
-    services/         **API client, auth API**
-    store/            **Redux store and auth slice**
+    routes/           **Route guards (ProtectedRoute, PublicRoute)**
+    services/         **API client, auth API, profile API**
+    store/            **Redux store (auth slice, profile slice)**
     theme/            **MUI theme config (AppTheme, themePrimitives, customizations/)**
     utils/            **Constants, route paths**
     **App.jsx**          Root layout (theme provider, error boundary, fetchCurrentUser, Outlet)
@@ -148,8 +148,9 @@ client/
 - No deprecated MUI props: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`.
 - App.jsx serves as root layout: AppThemeProvider, CssBaseline, AppErrorBoundary, AppToastContainer, `<Outlet />`, and `useEffect` dispatching `fetchCurrentUser()` on mount.
 - Auth pages (LoginPage, RegisterPage) use MuiCard + MuiTextField + MuiPasswordField from `components/reusable/`. Submit buttons use MuiButton with native `loading`, `loadingIndicator={<CircularProgress size={20} />}`, and `loadingPosition="center"`. MuiPasswordField has eye toggle for show/hide — `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift.
-- PublicLayout provides fixed AppBar + scrollable content area: outer `height: 100vh; overflow: hidden`, AppBar fixed, content `overflow-y: auto`. PublicAppBar includes logo (clickable → `/`) and dark/light theme toggle via `useColorScheme`.
+- PublicLayout provides fixed AppBar + scrollable content area: outer `height: 100vh; overflow: hidden`, AppBar fixed, content `overflow-y: auto`. PublicAppBar includes logo (clickable → `/dashboard` if authenticated, `/` otherwise) and dark/light theme toggle via `useColorScheme`.
 - ProtectedRoute shows loading spinner during auth initialisation, redirects to /login with `state.from` if not authenticated.
+- PublicRoute (inverse guard) redirects authenticated users to `/dashboard`. Wraps login, register, and OAuth callback pages to prevent authenticated access. Generic design: adding a new public page requires only nesting it inside `<PublicRoute>`.
 - apiClient uses `VITE_API_BASE_URL` with `credentials: "include"`. On 401, attempts `/auth/refresh` via direct `fetch` (not apiClient, avoids circular dependency); refresh success retries original request, refresh failure throws `SESSION_EXPIRED` which dispatches `clearAuth`. Login/register/refresh/logout excluded from 401 handling.
 - authSlice handles register, login, logout, fetchCurrentUser async thunks, plus `clearAuth` action for external session-expiry dispatch.
 - ReportsPage provides list (card) and grid (MUI Data Grid) view toggle, search by title, status filter, and server-side pagination.
@@ -158,10 +159,10 @@ client/
 - reportsApi and branchesApi use apiClient with query string building for pagination/search params.
 - CreateReportPage displays report metadata and hosts AudioRecorder for recording branch visit audio.
 - AudioRecorder uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
-- AppSidebar responsive: permanent Drawer on `md+`, temporary Drawer on mobile.
-- AppTopbar shows current page title and user avatar dropdown with profile link and logout.
-- Dashboard displays summary cards (total/draft/generated reports) and recent activity.
-- ProfilePage uses profileSlice (fetchProfile, updateProfile, changePassword) and profileApi service.
+- AppSidebar responsive: permanent Drawer on `md+`, temporary Drawer on mobile. Navigation items (Dashboard, Reports, Profile) at top with `flexGrow: 1`; Logout at bottom separated by a Divider.
+- AppTopbar shows current page title (dynamic from route) and user avatar dropdown with profile link and logout.
+- Dashboard displays summary cards (total/draft/generated reports) and recent activity placeholder.
+- ProfilePage uses profileSlice (fetchProfile, updateProfile, changePassword) and profileApi service. Two-column layout: personal information form (name, phone, avatarUrl) + change password form. Uses react-hook-form with register and Mui wrappers.
 
 ## Data Model Direction
 

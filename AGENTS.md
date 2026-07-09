@@ -2,7 +2,9 @@
 
 ## Project State
 
-Phases 1-5 complete. Phase 5 audit-driven fixes applied across backend and client. Backend all-clean: graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env. Client all-clean: AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file. All backend and client files pass syntax validation and builds.
+Phases 1-6 complete. Phase 5 audit-driven fixes applied across backend and client. Backend all-clean: graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env. Client all-clean: AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file, AppTheme.jsx uses @module. All backend and client files pass syntax validation and builds.
+
+Phase 6 built: AppShell (responsive sidebar with logout at bottom + Divider, top bar with dynamic page title + user menu, scrollable content area), DashboardPage (summary stat cards + recent activity placeholder), ProfilePage (two-column: personal info form + change password form, react-hook-form with register, Mui wrappers), ReportsPlaceholderPage, profileApi/profileSlice (fetchProfile, updateProfile, changePassword), PublicRoute guard (inverse — redirects authenticated users from public auth pages to /dashboard), PublicAppBar logo navigates to /dashboard if authenticated else /.
 
 ## Core Identity
 
@@ -73,6 +75,9 @@ Each phase follows **exactly 6 steps in order**:
 - **MuiPasswordField**: eye toggle via `useState`/`useCallback`, `onMouseDown` prevents focus loss, no layout shift; merges caller's `slotProps.input.endAdornment`
 - **MuiButton**: uses MUI's native `loading`, `loadingIndicator`, and `loadingPosition` props — pass `<CircularProgress size={20} />` as `loadingIndicator` and `"center"` as `loadingPosition` for centered spinner
 - **Layout pattern**: fixed chrome + scrollable content on ALL layouts (public AND protected). Outer `height: 100vh; overflow: hidden`, chrome fixed, content `overflow-y: auto`. Never scroll body/html.
+- **PublicRoute guard**: inverse of ProtectedRoute — redirects authenticated users to `/dashboard`. Wraps login, register, and oauth/callback pages. Adding future public pages requires only nesting inside `<PublicRoute>`.
+- **PublicAppBar logo navigation**: reads `isAuthenticated` from Redux; click navigates to `/dashboard` if authenticated, else `/`.
+- **AppSidebar logout placement**: Logout ListItemButton at bottom of sidebar, separated by Divider, pushed down by `justifyContent: 'space-between'` on a flex container wrapping nav items and logout section.
 - **401→refresh→retry in apiClient**: direct `fetch` for refresh (not apiClient, avoids circular dep); `SESSION_EXPIRED` on refresh failure dispatches `clearAuth`; login/register/refresh/logout excluded from 401 handling
 - **StrictMode double-fetch is normal**: React `<StrictMode>` in `main.jsx` double-invokes effects in dev — `fetchCurrentUser` fires twice on refresh. Production fires once. Do NOT remove StrictMode.
 
@@ -113,5 +118,5 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/prompts/initial-one-time-prompt.md` — full specification (source of truth for all conventions above)
 - `docs/phases/phase-1-summary.md` through `docs/phases/phase-16-summary.md` — per-phase implementation records
 - `docs/phase-1-4-validation.md` — validated alignment between docs and implemented code for phases 1-4
-- `docs/phase-1-6-validation.md` — broader validation report covering phases 1-3
+- `docs/phase-1-6-validation.md` — validation report covering phases 1-6 (backend + client alignment audit)
 - `AGENTS.md` — this file (project state, conventions, protocol)

@@ -1,14 +1,14 @@
-# Phase 1-5 Validation Report
+# Phase 1-6 Validation Report
 
 **Date:** 2026-07-09
-**Scope:** Exhaustive comparison of `docs/*` spec baseline against `backend/*` and `client/*` implementation for phases 1-5.
-**Files audited:** 36 docs, 30 backend source, 42 client source
+**Scope:** Exhaustive comparison of `docs/*` spec baseline against `backend/*` and `client/*` implementation for phases 1-6.
+**Files audited:** 36 docs, 30 backend source, 47 client source
 
 ---
 
 ## Summary
 
-All files fully aligned after Phase 5 audit-driven fixes. All violations found during deep audit have been corrected.
+All files fully aligned after Phase 5 audit-driven fixes and Phase 6 implementation. All violations found during deep audits have been corrected.
 
 ---
 
@@ -37,6 +37,7 @@ All checked and confirmed correct:
 - ES Modules throughout ✅
 - JSDoc on all public modules, functions, controllers, services, models ✅
 - All 30 files pass `node --check` syntax validation ✅
+- All 30 backend src files re-verified during Phase 6 audit — no regressions ✅
 
 ## Client (42 files)
 
@@ -63,6 +64,25 @@ All checked and confirmed correct:
 - JSDoc on all reusable components, pages, layouts, routes ✅
 - `npx vite build` — 0 errors ✅
 
+## Phase 6 Client Additions (5 new files, 2 new/modified)
+
+- `services/profileApi.js` — getProfile, updateProfile, changePassword with centralized apiClient ✅
+- `store/profileSlice.js` — fetchProfile, updateProfile, changePassword thunks; per-action loading/error states ✅
+- `routes/PublicRoute.jsx` — inverse guard: redirects authenticated users to /dashboard ✅
+- `components/layout/AppShell.jsx` — wires AppTopbar + AppSidebar + AppContent, manages mobile state ✅
+- `components/layout/AppSidebar.jsx` — responsive Drawer (permanent/temporary), nav items top, logout bottom with Divider ✅
+- `components/layout/AppTopbar.jsx` — fixed top bar, hamburger menu (mobile), dynamic page title, user avatar dropdown ✅
+- `components/layout/AppContent.jsx` — scrollable content area with `<Outlet />` ✅
+- `pages/dashboard/DashboardPage.jsx` — summary stat cards, recent activity placeholder, fetches profile ✅
+- `pages/profile/ProfilePage.jsx` — two-column layout, personal info + change password, react-hook-form, Mui wrappers ✅
+- `pages/reports/ReportsPlaceholderPage.jsx` — placeholder with MuiEmptyState ✅
+- `store/store.js` — added profileReducer to store config ✅
+- `main.jsx` — AppShell wraps protected routes, PublicRoute wraps auth pages ✅
+- `PublicAppBar.jsx` — logo navigates to /dashboard if authenticated, else / ✅
+- All Phase 6 files have JSDoc on public modules/functions ✅
+- All Phase 6 files use theme-aware sx, MUI tree-shaking, no deprecated props ✅
+- `npx vite build` — 0 errors (verified after all Phase 6 changes) ✅
+
 ## Root Config (4 files)
 
 - `package.json` — workspace scripts ✅
@@ -72,14 +92,14 @@ All checked and confirmed correct:
 
 ## Docs (36 files)
 
-- `docs/ARCHITECTURE.md` — Phase 1-5 items bolded, patterns updated (AppThemeProvider, LocalizationProvider, MuiButton loading) ✅
+- `docs/ARCHITECTURE.md` — Phase 1-5 items bolded, patterns updated (AppThemeProvider, LocalizationProvider, MuiButton loading); Phase 6 items bolded (AppShell, AppSidebar, AppTopbar, AppContent, DashboardPage, ProfilePage, PublicRoute, profileApi, profileSlice); PublicRoute guard pattern documented; sidebar logout-at-bottom documented; logo smart navigation documented ✅
 - `docs/PACKAGE_DECISIONS.md` — packages match implementation ✅
 - `docs/DEVELOPMENT_PHASES.md` — 16-phase roadmap, Phase 5 scope includes audit fixes ✅
 - `docs/PRD.md`, `docs/PROBLEM_STATEMENT.md`, `docs/PROJECT_OVERVIEW.md` ✅
 - `docs/prompts/initial-one-time-prompt.md` ✅
 - `docs/prompts/phases/` — all 16 phase prompts ✅
 - `docs/research/` — Addis AI research ✅
-- `docs/phases/phase-1-summary.md` through `phase-5-summary.md` — all updated ✅
+- `docs/phases/phase-1-summary.md` through `phase-6-summary.md` — all updated ✅
 - `docs/decisions/README.md` — ADR index ✅
 - `docs/decisions/ADR-001` through `ADR-006` — all consistent ✅
 

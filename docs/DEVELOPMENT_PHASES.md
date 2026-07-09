@@ -9,7 +9,7 @@
 | 3  | Authentication and profile API         | User model, auth routes, JWT, OAuth, profile endpoints   |
 | 4  | Frontend foundation, routing, auth     | React Router data mode, Redux Toolkit auth, apiClient with 401→refresh, reusable MUI wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard), PublicAppBar + scrollable layout, auth/landing/404 pages, ProtectedRoute guard |
 | 5  | Theme and reusable MUI components      | 8 MUI wrappers created (MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid, MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState); AppThemeProvider created; LocalizationProvider with AdapterDayjs in main.jsx; MuiButton uses native MUI loading props; audit-driven fixes across backend (apiResponse, env, googleOAuth route, graceful shutdown mongoose disconnect) and client (ProtectedRoute state.from, centralized API_CONFIG, JSDoc, @file→@module) |
-| 6  | Protected dashboard and profile page   | Dashboard shell, sidebar, top bar, profile page           |
+| 6  | Protected dashboard and profile page   | AppShell, AppSidebar (responsive, logout at bottom), AppTopbar (dynamic page title + user menu), AppContent, DashboardPage (summary cards), ProfilePage (personal info + change password), ReportsPlaceholderPage, profileApi/profileSlice, PublicRoute guard (redirects authenticated users from public auth pages), logo navigates to /dashboard if authenticated |
 | 7  | Branch and report backend              | Branch + Report models, CRUD endpoints                   |
 | 8  | Reports list/grid frontend             | Report list cards, MUI Data Grid, create report flow     |
 | 9  | Audio recording frontend               | MediaRecorder, playback, discard, submit UI              |

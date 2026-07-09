@@ -29,9 +29,9 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 | Path | Page | Access |
 |---|---|---|
 | `/` | Landing page (hero + CTAs) | Public |
-| `/login` | Login form (MuiCard, email/password, OAuth section) | Public |
-| `/register` | Registration form (MuiCard, name/email/password) | Public |
-| `/oauth/callback` | OAuth redirect handler | Public |
+| `/login` | Login form (MuiCard, email/password, OAuth section) | Public (PublicRoute guard — redirects to /dashboard if authenticated) |
+| `/register` | Registration form (MuiCard, name/email/password) | Public (PublicRoute guard — redirects to /dashboard if authenticated) |
+| `/oauth/callback` | OAuth redirect handler | Public (PublicRoute guard — redirects to /dashboard if authenticated) |
 | `/dashboard` | Dashboard (via ProtectedRoute) | Authenticated |
 | `/reports` | Reports list (via ProtectedRoute) | Authenticated |
 | `/profile` | Profile page (via ProtectedRoute) | Authenticated |
@@ -39,4 +39,4 @@ MERN stack application for area supervisors to generate daily Amharic branch-vis
 
 ## Development Phases
 
-The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–5 complete.
+The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`. Phases 1–6 complete.
