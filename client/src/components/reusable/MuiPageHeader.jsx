@@ -15,9 +15,10 @@ import Box from '@mui/material/Box';
  * @param {string} props.title - Page heading text
  * @param {string} [props.subtitle] - Secondary text below the title
  * @param {React.ReactNode} [props.action] - Element rendered on the right (button, menu, etc.)
+ * @param {object} [props.sx] - Additional sx overrides for the outer Box
  * @returns {JSX.Element}
  */
-function MuiPageHeader({ title, subtitle, action }) {
+function MuiPageHeader({ title, subtitle, action, sx }) {
   return (
     <Box
       sx={{
@@ -27,6 +28,7 @@ function MuiPageHeader({ title, subtitle, action }) {
         flexWrap: 'wrap',
         gap: 2,
         mb: 3,
+        ...sx,
       }}
     >
       <Box sx={{ flex: '1 1 auto' }}>

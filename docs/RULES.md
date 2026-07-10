@@ -353,7 +353,31 @@
 - [ ] **28.7** All operational errors use `throw new ApiError(statusCode, message)` — never raw throw. [PHASE2-SUMMARY:84]
 - [ ] **28.8** HTTP status codes imported from `httpStatus` — never hardcoded. [PHASE2-SUMMARY:91]
 
+## 29. Phase 8 Report Frontend Rules
+
+- [ ] **29.1** MuiDatePicker must explicitly switch between `DesktopDatePicker` (md+, popper) and `MobileDatePicker` (<md, dialog) using `theme.breakpoints.up('md')` — never rely on DatePicker auto-switching. [PHASE8-SUMMARY, CLIENT:MuiDatePicker.jsx]
+- [ ] **29.2** MuiSelect defaults `MenuProps={{ slotProps: { paper: { sx: { maxHeight: 300 } } } }}` for consistent dropdown height. [PHASE8-SUMMARY, CLIENT:MuiSelect.jsx]
+- [ ] **29.3** MuiDialog defaults `disableEnforceFocus={true}` and `disableRestoreFocus={true}` to prevent focus-management issues in modal dialogs. [PHASE8-SUMMARY, CLIENT:MuiDialog.jsx]
+- [ ] **29.4** MuiButton defaults `size="small"`. [PHASE8-SUMMARY, CLIENT:MuiButton.jsx]
+- [ ] **29.5** MuiPageHeader accepts `sx` prop for outer Box overrides. [PHASE8-SUMMARY, CLIENT:MuiPageHeader.jsx]
+- [ ] **29.6** MuiPagination defaults `color="primary"` and `shape="rounded"`. [PHASE8-SUMMARY, CLIENT:MuiPagination.jsx]
+- [ ] **29.7** DataGrid action column icon colors use `sx` theme-path strings (`'primary.main'`, `'warning.main'`, `'error.main'`) — never the `color` prop on IconButton. [PHASE8-SUMMARY, CLIENT:ReportsDataGrid.jsx]
+- [ ] **29.8** Tooltip children wrapping IconButton or other MUI elements must be wrapped in `<span>` for reliable event-handler attachment. [PHASE8-SUMMARY, CLIENT:ReportsDataGrid.jsx]
+- [ ] **29.9** GlobalSearchDialog uses `react-hook-form` `useForm` with `register` for the search input (uncontrolled, no re-render on keystroke). Left arrow (ArrowBackIcon) start adornment clears field + resets results + closes dialog. [PHASE8-SUMMARY, CLIENT:GlobalSearchDialog.jsx]
+- [ ] **29.10** ReportsFilterDialog handleClear must pass explicit empty filter defaults (status: '', branch: '', dateFrom: '', dateTo: '') and call onApply + onClose. [PHASE8-SUMMARY, CLIENT:ReportsFilterDialog.jsx]
+- [ ] **29.11** ReportsPage uses MuiPagination for list view pagination. [PHASE8-SUMMARY, CLIENT:ReportsPage.jsx]
+- [ ] **29.12** ReportsToolbar uses MuiPageHeader as outer container with action slot for filter/create/toggle buttons. [PHASE8-SUMMARY, CLIENT:ReportsToolbar.jsx]
+- [ ] **29.13** ReportMetadataDialog uses MuiDatePicker via Controller (documented with code comment) and MuiTextField with `select multiple` for branch selection. [PHASE8-SUMMARY, CLIENT:ReportMetadataDialog.jsx]
+- [ ] **29.14** ReportsFilterDialog uses MuiDatePicker for date fields. [PHASE8-SUMMARY, CLIENT:ReportsFilterDialog.jsx]
+- [ ] **29.15** CreateReportPage must not pass `textAlign` as a DOM prop — place in `sx`. [PHASE8-SUMMARY, CLIENT:CreateReportPage.jsx]
+- [ ] **29.16** MuiEmptyState and MuiErrorState use MuiButton (not raw Button) for action/retry buttons. [PHASE8-SUMMARY, CLIENT:MuiEmptyState.jsx, MuiErrorState.jsx]
+- [ ] **29.17** ReportsDataGrid is wrapped with `withErrorBoundary` from react-error-boundary with a DataGridErrorFallback. [PHASE8-SUMMARY, CLIENT:ReportsDataGrid.jsx]
+- [ ] **29.18** ReportsDataGrid action column uses Stack with `sx={{ alignItems: 'center', justifyContent: 'center' }}` for centered icon layout. [PHASE8-SUMMARY, CLIENT:ReportsDataGrid.jsx]
+- [ ] **29.19** Always use MuiDialog (from reusable) instead of raw `@mui/material/Dialog` to inherit `disableEnforceFocus`/`disableRestoreFocus` defaults. [CLIENT:ReportsDataGrid.jsx, GlobalSearchDialog.jsx]
+- [ ] **29.20** Always use MuiButton (from reusable) instead of raw `@mui/material/Button` to inherit `size="small"` default. [CLIENT:ReportsToolbar.jsx, LandingPage.jsx, NotFoundPage.jsx, etc.]
+- [ ] **29.21** MuiCard always wraps children in CardContent — do NOT use MuiCard when the caller already provides CardContent or uses CardActions. Only use for simple card blocks where content is the direct child. [CLIENT:MuiCard.jsx]
+
 ---
 
-*Last updated: 2026-07-09*
-*Extracted from: ARCHITECTURE.md, PACKAGE_DECISIONS.md, DEVELOPMENT_PHASES.md, PRD.md, PROJECT_OVERVIEW.md, PROBLEM_STATEMENT.md, INITIAL_PROMPT, ADR-001 through ADR-006, ADR README, PHASE-1-SUMMARY through PHASE-7-SUMMARY, PHASE-1-4-VALIDATION, PHASE-1-6-VALIDATION, RESEARCH/addis-ai.md, RESEARCH/addis-ai-concrete-understanding.md, all 16 phase prompt files.*
+*Last updated: 2026-07-11*
+*Extracted from: ARCHITECTURE.md, PACKAGE_DECISIONS.md, DEVELOPMENT_PHASES.md, PRD.md, PROJECT_OVERVIEW.md, PROBLEM_STATEMENT.md, INITIAL_PROMPT, ADR-001 through ADR-006, ADR README, PHASE-1-SUMMARY through PHASE-8-SUMMARY, PHASE-1-4-VALIDATION, PHASE-1-6-VALIDATION, RESEARCH/addis-ai.md, RESEARCH/addis-ai-concrete-understanding.md, all 16 phase prompt files.*

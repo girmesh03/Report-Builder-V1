@@ -25,7 +25,8 @@ import PublicRoute from "./routes/PublicRoute.jsx";
 import AppShell from "./components/layout/AppShell.jsx";
 import DashboardPage from "./pages/dashboard/DashboardPage.jsx";
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
-import ReportsPlaceholderPage from "./pages/reports/ReportsPlaceholderPage.jsx";
+import ReportsPage from "./pages/reports/ReportsPage.jsx";
+import CreateReportPage from "./pages/reports/CreateReportPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -54,7 +55,8 @@ const router = createBrowserRouter([
             element: <AppShell />,
             children: [
               { path: "dashboard", element: <DashboardPage /> },
-              { path: "reports", element: <ReportsPlaceholderPage /> },
+              { path: "reports", element: <ReportsPage /> },
+              { path: "reports/:id", element: <CreateReportPage /> },
               { path: "profile", element: <ProfilePage /> },
             ],
           },

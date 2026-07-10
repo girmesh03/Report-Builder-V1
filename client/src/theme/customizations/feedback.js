@@ -28,6 +28,7 @@ const feedbackCustomizations = {
         "& .MuiDialog-paper": {
           borderRadius: "10px",
           border: "1px solid",
+          backgroundImage: "none",
           borderColor: (theme.vars || theme).palette.divider,
         },
       }),

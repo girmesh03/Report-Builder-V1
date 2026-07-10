@@ -6,8 +6,8 @@
 import { useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import MuiButton from '../../components/reusable/MuiButton.jsx';
 import { ROUTE_PATHS } from '../../utils/routePaths.js';
 
 /**
@@ -36,12 +36,12 @@ function LandingPage() {
         Record your activity, review the transcription, and generate structured reports with AI assistance.
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Button variant="contained" size="large" onClick={() => navigate(ROUTE_PATHS.REGISTER)}>
+        <MuiButton variant="contained" size="small" onClick={() => navigate(ROUTE_PATHS.REGISTER)}>
           Get started
-        </Button>
-        <Button variant="outlined" size="large" onClick={() => navigate(ROUTE_PATHS.LOGIN)}>
+        </MuiButton>
+        <MuiButton variant="outlined" size="small" onClick={() => navigate(ROUTE_PATHS.LOGIN)}>
           Sign in
-        </Button>
+        </MuiButton>
       </Stack>
     </Box>
   );

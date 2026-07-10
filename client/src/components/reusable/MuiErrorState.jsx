@@ -9,8 +9,8 @@
  */
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import MuiButton from './MuiButton.jsx';
 
 /**
  * @param {object} props
@@ -33,7 +33,7 @@ function MuiErrorState({ title = 'Something went wrong', message, onRetry, retry
         textAlign: 'center',
       }}
     >
-      <ErrorOutlineIcon sx={{ fontSize: 56, color: 'error.main', mb: 2 }} />
+      <ErrorOutlineRoundedIcon sx={{ fontSize: 56, color: 'error.main', mb: 2 }} />
       <Typography variant="h6" sx={{ mb: 1 }}>
         {title}
       </Typography>
@@ -43,9 +43,9 @@ function MuiErrorState({ title = 'Something went wrong', message, onRetry, retry
         </Typography>
       )}
       {onRetry && (
-        <Button variant="outlined" onClick={onRetry}>
+        <MuiButton variant="outlined" onClick={onRetry} size="small">
           {retryLabel}
-        </Button>
+        </MuiButton>
       )}
     </Box>
   );

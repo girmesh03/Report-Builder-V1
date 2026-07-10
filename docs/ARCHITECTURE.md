@@ -106,7 +106,7 @@ client/
     components/
       audio/          Audio recorder, playback, controls, meter, guidelines
       feedback/       **Toast, error boundary**
-      layout/         **PublicLayout, PublicAppBar, AppShell, AppSidebar, AppTopbar, AppContent**
+      layout/         **PublicLayout, PublicAppBar, AppShell, AppSidebar, AppTopbar, AppContent, GlobalSearchDialog**
       reusable/       MUI wrappers prefixed Mui
         **MuiTextField.jsx**
         **MuiPasswordField.jsx**
@@ -120,19 +120,19 @@ client/
         **MuiEmptyState.jsx**
         **MuiLoadingState.jsx**
         **MuiErrorState.jsx**
-        MuiIconButton.jsx    (future)
+        **MuiPagination.jsx**
     pages/
       public/         **Landing page**
       auth/           **Login, register, OAuth callback**
       dashboard/      **Dashboard landing page (summary cards + recent activity)**
       profile/        **Profile view and edit page (personal info + change password)**
-      reports/        **Reports placeholder page** → Reports list/grid page with search, filter, pagination
+      reports/        **ReportsPage** (list/grid toggle, search, filters, pagination, create dialog) and **CreateReportPage** (post-create scaffold, audio recording placeholder)
       errors/         **404 page**
     hooks/            Custom hooks (useAudioRecorder)
     providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
     routes/           **Route guards (ProtectedRoute, PublicRoute)**
-    services/         **API client, auth API, profile API**
-    store/            **Redux store (auth slice, profile slice)**
+    services/         **API client, auth API, profile API, reportsApi, branchesApi**
+    store/            **Redux store (auth slice, profile slice, reportsSlice, branchesSlice)**
     theme/            **MUI theme config (AppTheme, themePrimitives, customizations/)**
     utils/            **Constants, route paths**
     **App.jsx**          Root layout (theme provider, error boundary, fetchCurrentUser, Outlet)
@@ -145,7 +145,7 @@ client/
 - Tree-shaking MUI imports (`import TextField from '@mui/material/TextField'`).
 - `sx` and `styled()` for styling; no Tailwind.
 - `react-hook-form` with `register`; no `watch` or `Controller` unless documented with a code comment.
-- `forwardRef` on all reusable MUI input wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid). Non-input wrappers (MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState) do not require forwardRef.
+- `forwardRef` on all reusable MUI input wrappers (MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid, MuiPagination). Presentation wrappers (MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState) do not require forwardRef.
 - MUI Grid uses `size` prop (not `item`).
 - No deprecated MUI props: `margin="normal"` → `sx={{ mb: 2 }}`, `InputProps` → `slotProps.input`, `Box component="form"` → native `<form>`, `Box component="img"` → native `<img>`, `Link component="button"` → `Link slots={{ root: 'button' }}`.
 - App.jsx serves as root layout: AppThemeProvider, CssBaseline, AppErrorBoundary, AppToastContainer, `<Outlet />`, and `useEffect` dispatching `fetchCurrentUser()` on mount.
@@ -155,16 +155,29 @@ client/
 - PublicRoute (inverse guard) redirects authenticated users to `/dashboard`. Wraps login, register, and OAuth callback pages to prevent authenticated access. Generic design: adding a new public page requires only nesting it inside `<PublicRoute>`.
 - apiClient uses `VITE_API_BASE_URL` with `credentials: "include"`. On 401, attempts `/auth/refresh` via direct `fetch` (not apiClient, avoids circular dependency); refresh success retries original request, refresh failure throws `SESSION_EXPIRED` which dispatches `clearAuth`. Login/register/refresh/logout excluded from 401 handling.
 - authSlice handles register, login, logout, fetchCurrentUser async thunks, plus `clearAuth` action for external session-expiry dispatch.
-- ReportsPage provides list (card) and grid (MUI Data Grid) view toggle, search by title, status filter, and server-side pagination.
-- ReportMetadataDialog creates draft reports with date, branch selection (multi-select), title, and notes via React Hook Form.
-- reportsSlice and branchesSlice manage report/branch state with createAsyncThunk for API calls.
-- reportsApi and branchesApi use apiClient with query string building for pagination/search params.
-- CreateReportPage displays report metadata and hosts AudioRecorder for recording branch visit audio.
-- AudioRecorder uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
-- AppSidebar responsive: permanent Drawer on `md+`, temporary Drawer on mobile. Navigation items (Dashboard, Reports, Profile) at top with `flexGrow: 1`; Logout at bottom separated by a Divider.
-- AppTopbar shows current page title (dynamic from route) and user avatar dropdown with profile link and logout.
+- ReportsPage provides list (card grid `xs:12 sm:6 md:4`) and grid (MUI Data Grid) view toggle, status/branch/date filters via ReportsFilterDialog, server-side pagination via MuiPagination, and loading/empty/error states. Uses ReportsToolbar with MuiPageHeader, ReportsCardList, ReportsDataGrid, ReportsFilterDialog, ReportMetadataDialog.
+- ReportsToolbar uses MuiPageHeader as outer container with filter icon (Badge), create button (icon-only on xs, full on sm+), and view toggle (ToggleButtonGroup list/grid). Title hidden on xs via MuiPageHeader.
+- ReportsDataGrid uses MuiDataGrid with server-side pagination, checkbox selection, icon-only action column (view=primary.main, edit=warning.main, delete=error.main via sx theme-path strings), Tooltips wrapped in `<span>`, delete confirmation dialog with disableEnforceFocus/disableRestoreFocus, and withErrorBoundary wrapper.
+- ReportMetadataDialog creates draft reports with MuiDatePicker (via Controller, documented with comment), MuiTextField select multiple for branch selection, and notes field. Uses react-hook-form.
+- ReportsFilterDialog provides status select, branch select, date from/to (MuiDatePicker). Clear resets to empty defaults, applies, and closes.
+- reportMetadataDialog, branchesApi, reportsApi use apiClient with query string building for pagination/search params.
+- reportsSlice and branchesSlice manage report/branch state with createAsyncThunk, per-action loading/error states.
+- CreateReportPage displays report metadata summary and shows placeholder for audio recording (Phase 9). At `/reports/:id` route.
+- AudioRecorder (Phase 9) uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
+- AppSidebar responsive: permanent Drawer on `md+` (collapsible via MenuIcon), temporary Drawer on mobile (centered app name). Navigation items (Dashboard, Reports, Profile) at top with `justifyContent: 'space-between'`; Logout at bottom separated by Divider.
+- AppTopbar shows current page title (dynamic from route), search icon (opens GlobalSearchDialog), theme toggle (light/dark via `useColorScheme`), and user avatar dropdown with profile link and logout.
 - Dashboard displays summary cards (total/draft/generated reports) and recent activity placeholder.
-- ProfilePage uses profileSlice (fetchProfile, updateProfile, changePassword) and profileApi service. Two-column layout: personal information form (name, phone, avatarUrl) + change password form. Uses react-hook-form with register and Mui wrappers.
+- ProfilePage uses profileSlice (fetchProfile, updateProfile, changePassword) and profileApi service. Two-column layout (Grid size xs:12 md:6): personal information form (name, phone, avatarUrl) + change password form. Uses react-hook-form with register and Mui wrappers (MuiTextField, MuiPasswordField, MuiButton with native loading props).
+- GlobalSearchDialog: fullScreen on mobile, dialog on tablet+. react-hook-form useForm with uncontrolled input. ArrowBackIcon start adornment clears + resets + closes. Results grouped by report/branch via Accordion. Circular SearchOffIcon for no-results state. disableEnforceFocus/disableRestoreFocus.
+- MuiDatePicker explicitly switches between DesktopDatePicker (popper, md+) and MobileDatePicker (dialog, <md) via `theme.breakpoints.up('md')`.
+- MuiSelect defaults `MenuProps.slotProps.paper.sx.maxHeight: 300`.
+- MuiDialog defaults `disableEnforceFocus: true` and `disableRestoreFocus: true`.
+- MuiButton defaults `size="small"`.
+- MuiPageHeader accepts `sx` prop for outer Box overrides.
+- MuiPagination defaults `color="primary"` and `shape="rounded"`.
+- IconButton action colors use `sx` theme-path strings (`'primary.main'`, `'warning.main'`, `'error.main'`), never the `color` prop.
+- Tooltip children wrapping IconButton or other MUI elements must be wrapped in `<span>` for reliable event-handler attachment.
+- MuiEmptyState and MuiErrorState use MuiButton (not raw Button).
 
 ## Data Model Direction
 

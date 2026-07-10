@@ -9,7 +9,7 @@
  */
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import MuiButton from './MuiButton.jsx';
 
 /**
  * @param {object} props
@@ -43,9 +43,9 @@ function MuiEmptyState({ icon: Icon, title, description, actionLabel, onAction }
         </Typography>
       )}
       {actionLabel && onAction && (
-        <Button variant="contained" onClick={onAction}>
+        <MuiButton variant="contained" onClick={onAction} size="small">
           {actionLabel}
-        </Button>
+        </MuiButton>
       )}
     </Box>
   );

@@ -69,7 +69,8 @@ node backend/mock/index.js --wipe     # Drop all collections (development only)
 | `/register` | Registration form (MuiCard, name/email/password) | Public (PublicRoute guard — redirects to /dashboard if authenticated) |
 | `/oauth/callback` | OAuth redirect handler | Public (PublicRoute guard — redirects to /dashboard if authenticated) |
 | `/dashboard` | Dashboard (via ProtectedRoute) | Authenticated |
-| `/reports` | Reports list (via ProtectedRoute) | Authenticated |
+| `/reports` | Reports list/grid (via ProtectedRoute) — cards or Data Grid view, search, filters, pagination, create dialog | Authenticated |
+| `/reports/:id` | Create report scaffold (via ProtectedRoute) — metadata summary, audio recording coming in Phase 9 | Authenticated |
 | `/profile` | Profile page (via ProtectedRoute) | Authenticated |
 | `*` | 404 page (SVG + navigation) | Public |
 
@@ -77,7 +78,7 @@ node backend/mock/index.js --wipe     # Drop all collections (development only)
 
 The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`.
 
-**Status:** Phases 1–7 complete. Phase 7 built branch/report CRUD, mock data system, monthly/export endpoints. Audit-driven fixes applied across backend (unused imports, JSDoc compliance, controller delegation, dead code removal).
+**Status:** Phases 1–8 complete. Phase 7 built branch/report CRUD, mock data system, monthly/export endpoints. Phase 8 built reports list/grid frontend (card + Data Grid views), ReportsToolbar with MuiPageHeader, filter dialog, create report dialog, server-side pagination via MuiPagination, GlobalSearchDialog, post-build hardening (MuiDatePicker breakpoint switching, MuiSelect max-height, MuiDialog focus props, icon-only DataGrid actions with sx theme colors). Audit-driven fixes applied across backend (unused imports, JSDoc compliance, controller delegation, dead code removal).
 
 ## Validation
 

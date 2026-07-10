@@ -8,7 +8,7 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import MuiButton from '../reusable/MuiButton.jsx';
 
 /**
  * Fallback UI displayed when an error is caught.
@@ -35,9 +35,9 @@ function FallbackComponent({ error, resetErrorBoundary }) {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         {error.message}
       </Typography>
-      <Button variant="contained" onClick={resetErrorBoundary}>
+      <MuiButton variant="contained" onClick={resetErrorBoundary} size="small">
         Try again
-      </Button>
+      </MuiButton>
     </Box>
   );
 }

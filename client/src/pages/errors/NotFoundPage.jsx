@@ -6,9 +6,9 @@
 import { useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import notFoundSvg from '../../assets/notFound_404.svg';
+import MuiButton from '../../components/reusable/MuiButton.jsx';
 import { ROUTE_PATHS } from '../../utils/routePaths.js';
 
 /**
@@ -39,12 +39,12 @@ function NotFoundPage() {
         Page not found
       </Typography>
       <Stack direction="row" spacing={2}>
-        <Button variant="outlined" onClick={() => navigate(-1)}>
+        <MuiButton variant="outlined" onClick={() => navigate(-1)} size="small">
           Go back
-        </Button>
-        <Button variant="contained" onClick={() => navigate(ROUTE_PATHS.HOME)}>
+        </MuiButton>
+        <MuiButton variant="contained" onClick={() => navigate(ROUTE_PATHS.HOME)} size="small">
           Go home
-        </Button>
+        </MuiButton>
       </Stack>
     </Box>
   );

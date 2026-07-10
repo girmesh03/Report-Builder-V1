@@ -1,14 +1,17 @@
 /**
  * Reusable MUI DatePicker wrapper.
  *
- * Wraps @mui/x-date-pickers/DatePicker with forwardRef for
- * react-hook-form compatibility. Assumes a
- * LocalizationProvider is mounted higher in the tree.
+ * Switches between DesktopDatePicker (popper) on md+ screens
+ * and MobileDatePicker (dialog) on smaller screens to avoid
+ * nested-dialog issues and provide native mobile UX.
  *
  * @module components/reusable/MuiDatePicker
  */
-import { forwardRef } from 'react';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { forwardRef } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
+import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 
 /**
  * @param {object} props - MUI DatePicker props
@@ -16,9 +19,16 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
  * @returns {JSX.Element}
  */
 const MuiDatePicker = forwardRef((props, ref) => {
-  return <DatePicker {...props} ref={ref} />;
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+
+  if (isDesktop) {
+    return <DesktopDatePicker {...props} ref={ref} />;
+  }
+
+  return <MobileDatePicker {...props} ref={ref} />;
 });
 
-MuiDatePicker.displayName = 'MuiDatePicker';
+MuiDatePicker.displayName = "MuiDatePicker";
 
 export default MuiDatePicker;

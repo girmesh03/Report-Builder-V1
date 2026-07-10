@@ -2,13 +2,17 @@
 
 ## Project State
 
-Phases 1-7 complete. Phase 5 audit-driven fixes applied across backend and client. Phase 7 audit fixed 5 critical violations (broken status refs in report.service.js, hardcoded GENERAL_RATE_LIMIT, dead REPORT.TITLE_* constants, profile.controller delegation violation, unused validator package). Post-audit cleanup resolved 21+ additional violations across 9+ files.
+Phases 1-8 complete. Phase 5 audit-driven fixes applied across backend and client. Phase 7 audit fixed 5 critical violations (broken status refs in report.service.js, hardcoded GENERAL_RATE_LIMIT, dead REPORT.TITLE_* constants, profile.controller delegation violation, unused validator package). Post-audit cleanup resolved 21+ additional violations across 9+ files.
 
 **Backend all-clean:** graceful shutdown includes mongoose disconnect, apiResponse used in error and validate middleware, env used from config (not process.env), ADDIS_AI_STT_MODEL added to env vars, GET /oauth/google route added with googleOAuth controller, JSDoc @type annotations on all middleware, logger uses centralized env, no unused imports (bcrypt removed from mock/index.js), no unused parameters (all unused params prefixed with `_`), no dead code (oauthAccount.model.js removed, logger.debug removed, validator package removed), all JSDoc `@param`/`@returns`/`@throws` complete on all controllers/services. `GENERAL_RATE_LIMIT` constant added. Profile controller delegates to profile.service.js. backend/mock/index.js uses `ordered: true` for Report.create batch. All 31 backend source files pass `node --check`.
 
-**Client all-clean:** AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file, AppTheme.jsx uses @module. All 48 client files pass build.
+**Client all-clean:** AppThemeProvider created at client/src/providers/AppThemeProvider.jsx, JSDoc added to all 8 Phase 5 wrappers, LocalizationProvider with AdapterDayjs in main.jsx, MuiButton uses native MUI loading/loadingIndicator/loadingPosition props, ProtectedRoute passes state.from on redirect, API_CONFIG centralized in constants.js, theme customization files use @module instead of @file, AppTheme.jsx uses @module. All 48+ client files pass build.
 
-Phase 6 built: AppShell (responsive sidebar with logout at bottom + Divider, top bar with dynamic page title + user menu, scrollable content area), DashboardPage (summary stat cards + recent activity placeholder), ProfilePage (two-column: personal info form + change password form, react-hook-form with register, Mui wrappers), ReportsPlaceholderPage, profileApi/profileSlice (fetchProfile, updateProfile, changePassword), PublicRoute guard (inverse — redirects authenticated users from public auth pages to /dashboard), PublicAppBar logo navigates to /dashboard if authenticated else /.
+Phase 8 built: ReportsPage with list view (card grid, responsive `xs:12 sm:6 md:4`) and grid view (MuiDataGrid with server-side pagination). ReportsToolbar with search (debounced 400ms), status filter, date from/to pickers, list/grid toggle, create button. ReportMetadataDialog (react-hook-form, native date input, native multi-branch select, notes). CreateReportPage scaffold at `/reports/:id` (metadata summary, audio placeholder for Phase 9). reportsApi/branchesApi services. reportsSlice/branchesSlice Redux reducers. MuiErrorState.jsx icon fixed (`ErrorOutline` → `ErrorOutlineRoundedIcon`). All 48+ client files build with 0 errors.
+
+Phase 8 post-build hardening applied: MuiDialog defaults `disableEnforceFocus`/`disableRestoreFocus` to `true`. MuiSelect defaults `MenuProps.slotProps.paper.sx.maxHeight: 300`. MuiPagination defaults `color="primary" shape="rounded"`. MuiDatePicker explicitly switches between `DesktopDatePicker` (md+, popper) and `MobileDatePicker` (<md, dialog) via `theme.breakpoints.up('md')`. MuiPageHeader accepts `sx` prop. MuiButton defaults `size="small"`. MuiEmptyState and MuiErrorState use MuiButton. ReportsToolbar uses MuiPageHeader. ReportsDataGrid action column icon-only with Tooltips and `sx` theme-path colors (`primary.main`, `warning.main`, `error.main`). ReportsFilterDialog clear resets + applies + closes. ReportsPage uses MuiPagination. GlobalSearchDialog uses react-hook-form `useForm` with left arrow start adornment, `disableEnforceFocus`/`disableRestoreFocus`. CreateReportPage `textAlign` moved into `sx`. AppSidebar centered app name in temporary drawer.
+
+Phase 6 built: AppShell (responsive sidebar with logout at bottom + Divider, top bar with dynamic page title + user menu, scrollable content area), DashboardPage (summary stat cards + recent activity placeholder), ProfilePage (two-column: personal info form + change password form, react-hook-form with register, Mui wrappers, MuiPageHeader, MuiButton with native loading), ReportsPlaceholderPage replaced by ReportsPage, profileApi/profileSlice (fetchProfile, updateProfile, changePassword), PublicRoute guard (inverse — redirects authenticated users from public auth pages to /dashboard), PublicAppBar logo navigates to /dashboard if authenticated else / with theme toggle. GlobalSearchDialog in AppTopbar with search + theme toggle. AppShell collapsible sidebar support.
 
 Phase 7 built: Branch model (name enum from BRANCH_NAMES constant — 14 predefined Amharic names) + Report model with embedded schemas (audioClips, transcription, generatedReport, exportHistory), mongoose-paginate-v2, CRUD services/controllers/routes/validators, owner-scoped report access, backend/mock/index.js (--inject seeds 2 supervisors + 14 branches + 11 reports; --wipe drops all collections; both use MongoDB sessions). Branch schema field renamed from `area` to `branch`. Added `GET /api/v1/reports/monthly?year=&month=` for monthly compilation (dynamic statusCounts) and `GET /api/v1/reports/export?dateFrom=&dateTo=` for date-range export. `TASK_STATUS` constant (PENDING/ON_PROGRESS/COMPLETED) added to constants.js for future task-level status system. `GENERAL_RATE_LIMIT` constant added.
 
@@ -77,7 +81,13 @@ Each phase follows **exactly 6 steps in order**:
 
 - MUI tree-shaking imports: `import TextField from '@mui/material/TextField'`
 - MUI Grid uses `size` prop, not `item` (e.g. `<Grid size={{ xs: 12, md: 6 }}>`)
-- 12 reusable MUI wrappers in `client/src/components/reusable/`, prefixed `Mui`. Input wrappers use `forwardRef`: MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid. Presentation wrappers: MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState.
+- 13 reusable MUI wrappers in `client/src/components/reusable/`, prefixed `Mui`. Input wrappers use `forwardRef`: MuiTextField, MuiPasswordField, MuiButton, MuiCard, MuiSelect, MuiDatePicker, MuiDialog, MuiDataGrid, MuiPagination. Presentation wrappers: MuiPageHeader, MuiEmptyState, MuiLoadingState, MuiErrorState.
+- MuiDatePicker explicitly switches between `DesktopDatePicker` (popper on md+) and `MobileDatePicker` (dialog on <md) via `theme.breakpoints.up('md')`.
+- MuiSelect defaults `MenuProps.slotProps.paper.sx.maxHeight: 300`.
+- MuiDialog defaults `disableEnforceFocus` and `disableRestoreFocus` to `true`.
+- MuiButton defaults `size="small"`.
+- MuiPageHeader accepts `sx` prop for outer Box overrides.
+- **Prefer Mui wrappers over raw MUI**: always use MuiButton, MuiDialog, MuiTextField, MuiPasswordField, MuiSelect, MuiDatePicker, MuiDataGrid, MuiPagination, MuiCard over their raw MUI counterparts. Exceptions: MuiCard cannot replace `<Card> + <CardContent>` pattern (MuiCard auto-wraps children in CardContent). Use `import Component from '@mui/material/Component'` only when no reusable wrapper exists.
 - `react-hook-form` with `register` — no `watch` or `Controller` unless documented with a code comment
 - UI English only; content (audio, transcription, reports, AI chat) can be Amharic/English/mixed
 - `apiClient` uses `credentials: "include"` for cookie-based auth
@@ -87,10 +97,14 @@ Each phase follows **exactly 6 steps in order**:
 - **Layout pattern**: fixed chrome + scrollable content on ALL layouts (public AND protected). Outer `height: 100vh; overflow: hidden`, chrome fixed, content `overflow-y: auto`. Never scroll body/html.
 - **PublicRoute guard**: inverse of ProtectedRoute — redirects authenticated users to `/dashboard`. Wraps login, register, and oauth/callback pages. Adding future public pages requires only nesting inside `<PublicRoute>`.
 - **PublicAppBar logo navigation**: reads `isAuthenticated` from Redux; click navigates to `/dashboard` if authenticated, else `/`.
-- **AppSidebar logout placement**: Logout ListItemButton at bottom of sidebar, separated by Divider, pushed down by `justifyContent: 'space-between'` on a flex container wrapping nav items and logout section.
+- **AppSidebar**: responsive permanent Drawer (md+, collapsible) + temporary Drawer (mobile, centered app name). Navigation items with Logout at bottom separated by Divider via `justifyContent: 'space-between'`.
+- **AppTopbar**: dynamic page title, search icon (opens GlobalSearchDialog), theme toggle (light/dark via `useColorScheme`), user avatar dropdown with profile + logout.
+- **GlobalSearchDialog**: fullScreen on mobile, dialog on tablet+. react-hook-form `useForm` for uncontrolled input. Left arrow (ArrowBackIcon) start adornment clears field + resets results + closes dialog. Results grouped by report/branch via Accordion. Circular search-off icon for no-results state.
+- **IconButton action colors in DataGrid**: use `sx` theme-path strings (`'primary.main'`, `'warning.main'`, `'error.main'`) per RULES.md rule 8.5. Never hardcoded hex or rgb values.
+- **Tooltip wrapping**: always wrap child with `<span>` for reliable event-handler attachment when child is IconButton or other MUI element.
 - **401→refresh→retry in apiClient**: direct `fetch` for refresh (not apiClient, avoids circular dep); `SESSION_EXPIRED` on refresh failure dispatches `clearAuth`; login/register/refresh/logout excluded from 401 handling
 - **StrictMode double-fetch is normal**: React `<StrictMode>` in `main.jsx` double-invokes effects in dev — `fetchCurrentUser` fires twice on refresh. Production fires once. Do NOT remove StrictMode.
-- Theme-aware `sx`: use `color: 'text.secondary'`, `bgcolor: 'background.paper'` — never import from `themePrimitives.js` directly
+- **Theme-aware `sx`**: use `color: 'text.secondary'`, `bgcolor: 'background.paper'`, `color: 'primary.main'`, `color: 'warning.main'`, `color: 'error.main'` — never import from `themePrimitives.js` directly in components.
 
 ## Critical Package Decisions
 
@@ -132,5 +146,6 @@ Addis AI API keys (`sk_*`) must never appear in client code, Vite env vars sent 
 - `docs/phase-1-4-validation.md` — validated alignment between docs and implemented code for phases 1-4
 - `docs/phase-1-6-validation.md` — validation report covering phases 1-6 (backend + client alignment audit)
 - `docs/phases/phase-7-summary.md` — Phase 7 implementation record (branch/report models, CRUD, mock data, monthly report, export)
+- `docs/phases/phase-8-summary.md` — Phase 8 implementation record (reports list/grid frontend, search/filter, create report dialog, pagination, post-build hardening)
 - **`docs/RULES.md`** — consolidated rulebook (~280 rules across 28 categories, extracted from every line of every document)
 - `AGENTS.md` — this file (project state, conventions, protocol)

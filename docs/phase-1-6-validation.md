@@ -131,3 +131,42 @@ All checked and confirmed correct:
 | GET | `/api/v1/profile` | ✅ authenticated profile |
 | PATCH | `/api/v1/profile` | ✅ updates name/phone/avatar |
 | PATCH | `/api/v1/profile/password` | ✅ changes password |
+| GET | `/api/v1/branches` | ✅ paginated branch list |
+| POST | `/api/v1/branches` | ✅ branch creation |
+| PATCH | `/api/v1/branches/:id` | ✅ branch update |
+| DELETE | `/api/v1/branches/:id` | ✅ branch deactivation |
+| GET | `/api/v1/reports` | ✅ paginated report list with status/branch/date filters |
+| POST | `/api/v1/reports` | ✅ draft report creation |
+| PATCH | `/api/v1/reports/:id` | ✅ report update |
+| DELETE | `/api/v1/reports/:id` | ✅ delete draft only |
+| GET | `/api/v1/reports/:id` | ✅ get single report |
+| GET | `/api/v1/reports/monthly` | ✅ monthly compilation |
+| GET | `/api/v1/reports/export` | ✅ date-range export |
+
+## Phase 8 Validation (Frontend)
+
+| Rule | Status |
+|------|--------|
+| ReportsPage with list (card grid) and grid (Data Grid) views | ✅ |
+| ReportsToolbar uses MuiPageHeader with filter/create/toggle action slot | ✅ |
+| MuiDatePicker explicitly switches DesktopDatePicker/MobileDatePicker via breakpoint | ✅ |
+| MuiSelect defaults MenuProps.slotProps.paper.sx.maxHeight: 300 | ✅ |
+| MuiDialog defaults disableEnforceFocus/disableRestoreFocus: true | ✅ |
+| MuiButton defaults size="small" | ✅ |
+| MuiPageHeader accepts sx prop | ✅ |
+| MuiPagination defaults color="primary" shape="rounded" | ✅ |
+| DataGrid action icons use sx theme-path strings (not color prop) | ✅ |
+| Tooltip children wrapped in `<span>` | ✅ |
+| ReportsFilterDialog clear resets to empty + applies + closes | ✅ |
+| GlobalSearchDialog react-hook-form useForm + left arrow start adornment | ✅ |
+| CreateReportPage textAlign in sx (not DOM prop) | ✅ |
+| AppSidebar centered app name in temporary drawer | ✅ |
+| MuiEmptyState/MuiErrorState use MuiButton | ✅ |
+| ReportsDataGrid wrapped with withErrorBoundary | ✅ |
+| reportsReducer and branchesReducer in store | ✅ |
+| Routes: /reports (ReportsPage), /reports/:id (CreateReportPage) | ✅ |
+| No deprecated MUI props (`margin`, `InputProps`, `Box component`) | ✅ |
+| MUI Grid `size` prop used (not `item`) | ✅ |
+| react-hook-form `register` only (Controller only with documented comment) | ✅ |
+| Theme-aware sx (no direct themePrimitives imports in components) | ✅ |
+| JSDoc on all public modules and functions | ✅ |

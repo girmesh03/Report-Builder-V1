@@ -6,31 +6,41 @@
  *
  * @module pages/profile/ProfilePage
  */
-import { useEffect, useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
-import CircularProgress from '@mui/material/CircularProgress';
-import MuiPageHeader from '../../components/reusable/MuiPageHeader.jsx';
-import MuiTextField from '../../components/reusable/MuiTextField.jsx';
-import MuiPasswordField from '../../components/reusable/MuiPasswordField.jsx';
-import MuiButton from '../../components/reusable/MuiButton.jsx';
-import MuiLoadingState from '../../components/reusable/MuiLoadingState.jsx';
-import { fetchProfile, updateProfile, changePassword, clearProfileError } from '../../store/profileSlice.js';
+import { useEffect, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import CircularProgress from "@mui/material/CircularProgress";
+import MuiPageHeader from "../../components/reusable/MuiPageHeader.jsx";
+import MuiTextField from "../../components/reusable/MuiTextField.jsx";
+import MuiPasswordField from "../../components/reusable/MuiPasswordField.jsx";
+import MuiButton from "../../components/reusable/MuiButton.jsx";
+import MuiLoadingState from "../../components/reusable/MuiLoadingState.jsx";
+import {
+  fetchProfile,
+  updateProfile,
+  changePassword,
+  clearProfileError,
+} from "../../store/profileSlice.js";
 
 /**
  * @returns {JSX.Element}
  */
 function ProfilePage() {
   const dispatch = useDispatch();
-  const { user, loading, updateLoading, updateError, passwordLoading, passwordError } = useSelector(
-    (state) => state.profile,
-  );
+  const {
+    user,
+    loading,
+    updateLoading,
+    updateError,
+    passwordLoading,
+    passwordError,
+  } = useSelector((state) => state.profile);
 
   const profileForm = useForm();
   const passwordForm = useForm();
@@ -42,9 +52,9 @@ function ProfilePage() {
   useEffect(() => {
     if (user) {
       profileForm.reset({
-        name: user.name || '',
-        phone: user.phone || '',
-        avatarUrl: user.avatarUrl || '',
+        name: user.name || "",
+        phone: user.phone || "",
+        avatarUrl: user.avatarUrl || "",
       });
     }
   }, [user, profileForm]);
@@ -66,8 +76,8 @@ function ProfilePage() {
   const onSubmitProfile = useCallback(
     async (data) => {
       const result = await dispatch(updateProfile(data));
-      if (result.meta.requestStatus === 'fulfilled') {
-        toast.success('Profile updated');
+      if (result.meta.requestStatus === "fulfilled") {
+        toast.success("Profile updated");
       }
     },
     [dispatch],
@@ -76,8 +86,8 @@ function ProfilePage() {
   const onSubmitPassword = useCallback(
     async (data) => {
       const result = await dispatch(changePassword(data));
-      if (result.meta.requestStatus === 'fulfilled') {
-        toast.success('Password changed');
+      if (result.meta.requestStatus === "fulfilled") {
+        toast.success("Password changed");
         passwordForm.reset();
       }
     },
@@ -90,7 +100,10 @@ function ProfilePage() {
 
   return (
     <>
-      <MuiPageHeader title="Profile" subtitle="Manage your personal information" />
+      <MuiPageHeader
+        title="Profile"
+        subtitle="Manage your personal information"
+      />
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -99,15 +112,23 @@ function ProfilePage() {
               <Typography variant="h6" gutterBottom>
                 Personal Information
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", mb: 3 }}
+              >
                 Update your name, phone number, and avatar URL.
               </Typography>
-              <form onSubmit={profileForm.handleSubmit(onSubmitProfile)} noValidate>
+              <form
+                onSubmit={profileForm.handleSubmit(onSubmitProfile)}
+                noValidate
+              >
                 <MuiTextField
                   fullWidth
                   label="Name"
                   sx={{ mb: 2 }}
-                  {...profileForm.register('name', { required: 'Name is required' })}
+                  {...profileForm.register("name", {
+                    required: "Name is required",
+                  })}
                   error={!!profileForm.formState.errors.name}
                   helperText={profileForm.formState.errors.name?.message}
                 />
@@ -116,19 +137,19 @@ function ProfilePage() {
                   label="Email"
                   slotProps={{ input: { readOnly: true } }}
                   sx={{ mb: 2 }}
-                  value={user?.email || ''}
+                  value={user?.email || ""}
                 />
                 <MuiTextField
                   fullWidth
                   label="Phone"
                   sx={{ mb: 2 }}
-                  {...profileForm.register('phone')}
+                  {...profileForm.register("phone")}
                 />
                 <MuiTextField
                   fullWidth
                   label="Avatar URL"
                   sx={{ mb: 2 }}
-                  {...profileForm.register('avatarUrl')}
+                  {...profileForm.register("avatarUrl")}
                 />
                 <MuiButton
                   type="submit"
@@ -150,28 +171,43 @@ function ProfilePage() {
               <Typography variant="h6" gutterBottom>
                 Change Password
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", mb: 3 }}
+              >
                 Enter your current password and a new password.
               </Typography>
-              <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} noValidate>
+              <form
+                onSubmit={passwordForm.handleSubmit(onSubmitPassword)}
+                noValidate
+              >
                 <MuiPasswordField
                   fullWidth
                   label="Current Password"
                   sx={{ mb: 2 }}
-                  {...passwordForm.register('currentPassword', { required: 'Current password is required' })}
+                  {...passwordForm.register("currentPassword", {
+                    required: "Current password is required",
+                  })}
                   error={!!passwordForm.formState.errors.currentPassword}
-                  helperText={passwordForm.formState.errors.currentPassword?.message}
+                  helperText={
+                    passwordForm.formState.errors.currentPassword?.message
+                  }
                 />
                 <MuiPasswordField
                   fullWidth
                   label="New Password"
                   sx={{ mb: 2 }}
-                  {...passwordForm.register('newPassword', {
-                    required: 'New password is required',
-                    minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                  {...passwordForm.register("newPassword", {
+                    required: "New password is required",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters",
+                    },
                   })}
                   error={!!passwordForm.formState.errors.newPassword}
-                  helperText={passwordForm.formState.errors.newPassword?.message}
+                  helperText={
+                    passwordForm.formState.errors.newPassword?.message
+                  }
                 />
                 <MuiButton
                   type="submit"

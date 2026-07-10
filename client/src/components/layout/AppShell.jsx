@@ -1,8 +1,8 @@
 /**
  * Protected application shell.
  *
- * Wraps the AppSidebar, AppTopbar, and scrollable content area.
- * Manages mobile sidebar open/close state.
+ * Flex layout: AppSidebar on left, AppTopbar + AppContent on right
+ * in a column flex container. Manages mobile sidebar open/close state.
  *
  * @module components/layout/AppShell
  */
@@ -21,6 +21,7 @@ import { ROUTE_PATHS } from '../../utils/routePaths.js';
  */
 function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -32,6 +33,10 @@ function AppShell() {
     setMobileOpen(false);
   }, []);
 
+  const handleToggleCollapse = useCallback(() => {
+    setCollapsed((prev) => !prev);
+  }, []);
+
   const handleLogout = useCallback(() => {
     dispatch(logout());
     navigate(ROUTE_PATHS.LOGIN);
@@ -39,9 +44,17 @@ function AppShell() {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <AppTopbar onMenuToggle={handleMenuToggle} />
-      <AppSidebar open={mobileOpen} onClose={handleSidebarClose} onLogout={handleLogout} />
-      <AppContent />
+      <AppSidebar
+        open={mobileOpen}
+        onClose={handleSidebarClose}
+        onLogout={handleLogout}
+        collapsed={collapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
+        <AppTopbar onMenuToggle={handleMenuToggle} />
+        <AppContent />
+      </Box>
     </Box>
   );
 }

@@ -8,7 +8,6 @@
  */
 import { Outlet } from 'react-router';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
 
 /**
  * @returns {JSX.Element}
@@ -19,16 +18,13 @@ function AppContent() {
       component="main"
       sx={{
         flexGrow: 1,
-        height: '100vh',
-        overflow: 'hidden',
+        overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
+        p: 3,
       }}
     >
-      <Toolbar />
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3 }}>
-        <Outlet />
-      </Box>
+      <Outlet />
     </Box>
   );
 }
