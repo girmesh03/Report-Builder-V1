@@ -95,7 +95,7 @@ function ReportsPage() {
       const result = await dispatch(createReport(data));
       if (result.meta.requestStatus === 'fulfilled') {
         setDialogOpen(false);
-        setFilters((prev) => ({ ...prev, page: 1 }));
+        loadReports({ page: 1 });
       }
     }
   }, [dispatch, editingReport, loadReports]);

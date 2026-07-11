@@ -202,9 +202,6 @@ function ReportsFilterDialog({
                     : undefined,
                 },
               }}
-              sx={{
-                "&.MuiDialog-paper": { margin: 0 },
-              }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
