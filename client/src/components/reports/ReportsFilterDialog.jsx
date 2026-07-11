@@ -167,7 +167,11 @@ function ReportsFilterDialog({
               }}
             >
               <MenuItem value="">All</MenuItem>
-              {branches.map((b) => (
+              {branches.length === 0 ? (
+                <MenuItem disabled value="">
+                  No branches available
+                </MenuItem>
+              ) : branches.map((b) => (
                 <MenuItem key={b._id} value={b._id}>
                   {b.name}
                 </MenuItem>

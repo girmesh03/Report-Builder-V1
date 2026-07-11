@@ -96,8 +96,13 @@ Speech-to-text:
 - Response includes `status`, `data.transcription`, `data.usage_metadata.totalBilledDuration`, `data.usage_metadata.requestId`, and `confidence`.
 - Supported formats: WAV, MP3, M4A, WebM.
 - Recommended: WAV, 16kHz or higher, mono, quiet environment.
-- Limits: max 60 seconds, max 10 MB.
+- Limits: max 60 seconds per request, max 10 MB. App handles longer audio by backend WAV chunking (transparent to the frontend).
 - Optimized for single-speaker audio; overlapping voices can reduce quality.
+- **Critical accuracy rules:**
+  - After ffmpeg WAV conversion + PCM split, each chunk's `Blob.type` MUST be `audio/wav` (detect by checking first 4 bytes = `RIFF`). Using the original `audio/webm` type causes garbled transcription.
+  - The only approved chunking pipeline is: full-file ffmpeg WAV conversion (pcm_s16le, 16kHz, mono) → PCM-level WAV split (`wavSplitter.js`). Per-segment re-encoding is forbidden.
+  - Re-transcription must be available for accuracy verification.
+  - See RULES.md rules 13.21-13.25.
 
 Text generation:
 

@@ -29,6 +29,8 @@ This replaces the original "60-second auto-stop + approaching-60s warning" appro
 
 Long recordings exceeding Addis AI's per-request duration limit will be split into chunks by the backend before being sent to STT. Each chunk is processed independently and the results are concatenated. The frontend is agnostic to this — it sends the full blob as a single upload.
 
+**Accuracy-critical implementation (Phase 11):** The chunking pipeline converts the full audio to WAV via ffmpeg (single pass, pcm_s16le, 16kHz, mono) before splitting at the PCM level via `wavSplitter.js`. This avoids per-segment re-encoding artifacts (Opus decoder priming). Each chunk's buffer is a self-contained WAV file with a proper RIFF header. The Blob MIME type MUST be set to `audio/wav` for these chunks — using the original `audio/webm` type causes garbled transcription. See RULES.md rules 13.22-13.23.
+
 ### 4. Transient State, No Redux Persist
 
 The audio blob is stored in component-local state (`useState` + `useRef` in a custom hook). It is not persisted to Redux, `redux-persist`, or localStorage. This avoids bloating persisted state with large binary data.

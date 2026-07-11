@@ -59,6 +59,7 @@ node backend/mock/index.js --wipe     # Drop all collections (development only)
 | POST | `/api/v1/reports` | Yes | Create draft report |
 | PATCH | `/api/v1/reports/:id` | Yes | Update report |
 | DELETE | `/api/v1/reports/:id` | Yes | Delete draft only |
+| POST | `/api/v1/reports/:reportId/transcriptions` | Yes | Request STT transcription |
 
 ## Frontend Routes
 
@@ -78,7 +79,7 @@ node backend/mock/index.js --wipe     # Drop all collections (development only)
 
 The project follows 16 development phases, each on a feature branch (`phase-N-description`). Every phase requires explicit user approval before merging to `main`. See `docs/DEVELOPMENT_PHASES.md`.
 
-**Status:** Phases 1–8 complete. Phase 7 built branch/report CRUD, mock data system, monthly/export endpoints. Phase 8 built reports list/grid frontend (card + Data Grid views), ReportsToolbar with MuiPageHeader, filter dialog, create report dialog, server-side pagination via MuiPagination, GlobalSearchDialog, post-build hardening (MuiDatePicker breakpoint switching, MuiSelect max-height, MuiDialog focus props, icon-only DataGrid actions with sx theme colors). Audit-driven fixes applied across backend (unused imports, JSDoc compliance, controller delegation, dead code removal).
+**Status:** Phases 1–11 complete. Phase 7 built branch/report CRUD, mock data system, monthly/export endpoints. Phase 8 built reports list/grid frontend. Phase 11 built Addis AI STT integration with chunked audio processing, re-transcription, and 5 accuracy-critical rules (RULES.md 13.21-13.25). Audit-driven fixes applied across backend.
 
 ## Validation
 

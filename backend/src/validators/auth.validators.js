@@ -11,6 +11,8 @@ const PASSWORD_RANGE = { min: constants.AUTH.PASSWORD_MIN_LENGTH, max: constants
 
 /**
  * Validation rules for POST /api/v1/auth/register.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const registerRules = [
   body('name')
@@ -29,6 +31,8 @@ export const registerRules = [
 
 /**
  * Validation rules for POST /api/v1/auth/login.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const loginRules = [
   body('email')

@@ -7,11 +7,12 @@ import { body } from 'express-validator';
 
 const MIME_PATTERN = /^audio\//;
 
+/** @type {import('express-validator').ValidationChain[]} */
 export const uploadAudioRules = [
   body('durationSeconds')
     .optional()
-    .isFloat({ min: 0.1, max: 60 })
-    .withMessage('Duration must be between 0.1 and 60 seconds'),
+    .isFloat({ min: 0 })
+    .withMessage('Duration must be a non-negative number'),
 
   body('mimeType')
     .optional()
@@ -21,8 +22,9 @@ export const uploadAudioRules = [
 
   body('recordedAt')
     .optional()
-    .isISO8601()
-    .withMessage('RecordedAt must be a valid ISO 8601 date'),
+    .isString()
+    .notEmpty()
+    .withMessage('RecordedAt must be a non-empty string'),
 
   body('languageCode')
     .optional()

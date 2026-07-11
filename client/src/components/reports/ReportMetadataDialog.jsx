@@ -123,7 +123,11 @@ function ReportMetadataDialog({ open, onClose, onSubmit, branches, isLoading, in
                       },
                     }}
                   >
-                    {(branches || []).map((branch) => (
+                    {(!branches || branches.length === 0) ? (
+                      <MenuItem disabled value="">
+                        No branches available
+                      </MenuItem>
+                    ) : (branches || []).map((branch) => (
                       <MenuItem key={branch._id} value={branch._id}>
                         {branch.name}
                       </MenuItem>

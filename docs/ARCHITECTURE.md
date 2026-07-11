@@ -52,6 +52,7 @@ backend/
       **branch.routes.js  Branch route definitions (all authenticated)**
       **report.routes.js  Report route definitions (all authenticated, ownership enforced) — list, get, create, update, delete, monthly, export**
       **audio.routes.js   Audio upload route (POST /reports/:reportId/audio)**
+      **transcription.routes.js   Transcription route (POST /reports/:reportId/transcriptions)**
     services/
       **auth.service.js   Auth business logic (register, login, refresh)**
       **token.service.js  JWT access and refresh token generation/verification**
@@ -60,6 +61,10 @@ backend/
       **branch.service.js Branch CRUD with pagination, search, and soft deactivation**
       **report.service.js Report CRUD with pagination, filtering, user ownership, monthly compilation, date-range export**
       **audio.service.js  Audio upload business logic (attach clip, advance status)**
+      ai/
+        **addisAi.client.js       Addis AI HTTP client (native fetch, timeout, error mapping)**
+        **addisAiStt.service.js   STT transcription service (forwards audio to Addis AI, persists result)**
+        **aiProviderErrors.js     Maps Addis AI error codes to safe user messages**
     utils/
       **constants.js      Centralized constants (no magic values elsewhere)**
       **httpStatus.js     HTTP status code constants**
@@ -67,7 +72,7 @@ backend/
       **apiResponse.js    Standardised success response helper**
       **cookieOptions.js  httpOnly cookie configuration for access and refresh tokens**
       **logger.js         Structured logging utility**
-      **fileValidation.js Audio file type, size, and duration validation**
+      **fileValidation.js Audio file type, size, and allowed MIME validation. Duration metadata stored as informational — no hard duration limit on upload. Long audio chunked by backend for STT.**
     validators/
       **auth.validators.js    express-validator rules for register and login**
       **profile.validators.js express-validator rules for profile update and password change**
@@ -200,9 +205,9 @@ Branch and Report list endpoints use `mongoose-paginate-v2` with `page`, `limit`
 
 ## Addis AI Backend Proxy
 
-All Addis AI calls go through backend-only proxy services:
+All Addis AI calls go through backend-only proxy services (`backend/src/services/ai/`):
 
-- **STT:** receives browser audio → forwards as multipart/form-data → returns transcription
+- **STT:** `POST /api/v2/stt` — receives browser audio → forwards as multipart/form-data (audio file + request_data JSON) → returns transcription. Implemented in `addisAiStt.service.js` via `addisAi.client.js` base client. **Accuracy-critical:** The chunking pipeline (ffmpeg WAV conversion → PCM-level WAV split) and correct MIME type per chunk (`audio/wav` for converted chunks) are mandatory. See RULES.md rules 13.21-13.25.
 - **Text generation:** sends reviewed transcription + structured prompt → returns report
 - **TTS:** future scope
 - **Translation:** future scope

@@ -11,6 +11,8 @@ const PASSWORD_RANGE = { min: constants.AUTH.PASSWORD_MIN_LENGTH, max: constants
 
 /**
  * Validation rules for PATCH /api/v1/profile.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const updateProfileRules = [
   body('name')
@@ -30,6 +32,8 @@ export const updateProfileRules = [
 
 /**
  * Validation rules for PATCH /api/v1/profile/password.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const changePasswordRules = [
   body('currentPassword')

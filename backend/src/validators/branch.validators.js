@@ -10,6 +10,8 @@ const CODE_RANGE = { min: constants.BRANCH.CODE_MIN_LENGTH, max: constants.BRANC
 
 /**
  * Validation rules for POST /api/v1/branches.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const createBranchRules = [
   body('name')
@@ -38,6 +40,8 @@ export const createBranchRules = [
 
 /**
  * Validation rules for PATCH /api/v1/branches/:id.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const updateBranchRules = [
   body('name')

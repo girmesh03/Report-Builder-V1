@@ -112,6 +112,18 @@ UI behavior:
 Do not implement AI report generation in this phase.
 Do not use multimodal audio chat for the core flow.
 
+## Critical Accuracy Requirements
+
+Transcription accuracy is the single most important quality metric of the entire product. The following rules are MANDATORY and must be verified before this phase is considered complete:
+
+1. **Correct MIME type per chunk**: After ffmpeg WAV conversion + PCM split, each chunk buffer has a RIFF/WAVE header. The Blob `type` MUST be set to `audio/wav` — not the original `audio/webm`. Detecting WAV by checking the first 4 bytes (`RIFF`) is the approved approach.
+
+2. **Approved chunking pipeline**: The only approved pipeline is: full-file ffmpeg WAV conversion → in-memory PCM-level WAV split. Any other approach (per-segment re-encoding, raw format passthrough) is forbidden unless proven to produce equivalent accuracy.
+
+3. **Re-transcription MUST be available**: The backend must allow transcription when status is `audio_recorded` OR `transcribed`. The frontend must show a Re-transcribe button after completion.
+
+4. **Accuracy regression is a blocking defect**: Any change that degrades transcription quality must be reverted immediately. Accuracy must be verified with real Amharic audio before merging.
+
 Update docs:
 
 - `docs/research/addis-ai.md` with final implemented STT details.

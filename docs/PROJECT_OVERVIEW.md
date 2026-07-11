@@ -27,6 +27,8 @@ The app turns recorded activity audio into a reviewed transcription and then int
 6. Backend calls Addis AI STT → transcription returned.
 7. User reviews and edits transcription.
 8. Reviewed transcription sent to Addis AI text generation.
+
+**Accuracy note:** Transcription accuracy is the highest priority quality metric. The chunking pipeline (ffmpeg WAV → PCM split) and correct chunk MIME type are mandatory. See RULES.md rules 13.21-13.25.
 9. Generated report previewed → user edits if needed.
 10. Export as PDF, TXT, CSV, or spreadsheet.
 

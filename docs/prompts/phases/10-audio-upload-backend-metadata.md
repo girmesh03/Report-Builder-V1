@@ -50,7 +50,7 @@ Behavior:
 - Validate:
   - file required
   - max 10 MB
-  - max 60 seconds from client metadata, while recognizing client metadata is not fully trusted
+  - no hard duration limit — per ADR-005, duration metadata is informational only; long recordings chunked by backend at STT time
   - allowed MIME types:
     - `audio/wav`
     - `audio/x-wav`
@@ -98,7 +98,7 @@ Manual verification:
 
 - Upload valid audio.
 - Reject invalid MIME.
-- Reject over-limit size/duration metadata.
+- Reject over-limit size. Duration metadata is informational — no hard duration limit.
 - Verify report status changes.
 
 ### Step 5: User Review And Feedback Integration

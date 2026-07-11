@@ -36,7 +36,12 @@ export async function uploadAudio(reportId, audioBlob, metadata = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Upload failed' }));
-    throw new Error(err.message || `Upload failed with status ${res.status}`);
+    const details = Array.isArray(err.data)
+      ? err.data.map((e) => `${e.field}: ${e.message}`).join('; ')
+      : Array.isArray(err.errors)
+        ? err.errors.map((e) => `${e.path || e.field}: ${e.msg || e.message}`).join('; ')
+        : '';
+    throw new Error(details || err.message || `Upload failed with status ${res.status}`);
   }
 
   return res.json();

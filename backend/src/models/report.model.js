@@ -28,8 +28,8 @@ const transcriptionSchema = new mongoose.Schema(
     billedDuration: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
-      default: 'pending',
+      enum: Object.values(constants.TASK_STATUS),
+      default: constants.TASK_STATUS.PENDING,
     },
     errorMessage: { type: String, default: '' },
   },
@@ -46,8 +46,8 @@ const generationSchema = new mongoose.Schema(
     outputTokens: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
-      default: 'pending',
+      enum: Object.values(constants.TASK_STATUS),
+      default: constants.TASK_STATUS.PENDING,
     },
     errorMessage: { type: String, default: '' },
   },

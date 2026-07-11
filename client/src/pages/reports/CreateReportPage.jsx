@@ -5,7 +5,7 @@
  * separate toggles for Report Details and Recording Tips.
  * Provides the audio recording UI (Phase 9) for recording
  * and preparing audio submission.
- * Audio upload backend integration will be added in Phase 10.
+ * Audio upload (Phase 10) and transcription (Phase 11) integrated.
  *
  * @module pages/reports/CreateReportPage
  */
@@ -32,6 +32,7 @@ import MuiErrorState from '../../components/reusable/MuiErrorState.jsx';
 import ReportStatusChip from '../../components/reports/ReportStatusChip.jsx';
 import AudioRecorder from '../../components/audio/AudioRecorder.jsx';
 import AudioGuidelines from '../../components/audio/AudioGuidelines.jsx';
+import TranscriptionPanel from '../../components/reports/TranscriptionPanel.jsx';
 import { getReport } from '../../services/reportsApi.js';
 import { uploadAudio } from '../../services/audioApi.js';
 
@@ -46,6 +47,7 @@ function CreateReportPage() {
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [transcribed, setTranscribed] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showTips, setShowTips] = useState(false);
 
@@ -56,6 +58,12 @@ function CreateReportPage() {
     getReport(id)
       .then((res) => {
         setReport(res.data);
+        if (res.data.status !== 'draft') {
+          setSubmitted(true);
+          if (res.data.status === 'transcribed' || res.data.transcription?.status === 'completed') {
+            setTranscribed(true);
+          }
+        }
       })
       .catch((err) => {
         setError(err.message);
@@ -66,15 +74,33 @@ function CreateReportPage() {
   }, [id]);
 
   const handleAudioSubmit = async ({ blob, duration, mimeType }) => {
+    if (report && report.status !== 'draft') {
+      toast.error('Audio has already been uploaded for this report.');
+      setSubmitted(true);
+      return;
+    }
+
     setUploading(true);
     try {
       await uploadAudio(id, blob, { durationSeconds: duration, mimeType });
+      const updated = await getReport(id);
+      setReport(updated.data);
       toast.success('Audio uploaded successfully.');
       setSubmitted(true);
     } catch (err) {
       toast.error(err.message || 'Failed to upload audio. Please try again.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTranscriptionComplete = async (_transcriptionData) => {
+    setTranscribed(true);
+    try {
+      const updated = await getReport(id);
+      setReport(updated.data);
+    } catch {
+      // Silently ignore — transcription data is already available
     }
   };
 
@@ -210,14 +236,23 @@ function CreateReportPage() {
         </Card>
 
         {submitted ? (
-          <Card variant="outlined">
-            <CardContent>
+          <Stack spacing={2}>
+            {!transcribed && (
               <Alert severity="success">
-                Audio prepared for submission. Transcription and report generation will be
-                available in future updates.
+                Audio uploaded successfully.
               </Alert>
-            </CardContent>
-          </Card>
+            )}
+            <TranscriptionPanel
+              reportId={id}
+              onTranscriptionComplete={handleTranscriptionComplete}
+            />
+            {transcribed && (
+              <Alert severity="info">
+                Transcription complete. Review and report generation will be available
+                in the next update.
+              </Alert>
+            )}
+          </Stack>
         ) : (
           <Card variant="outlined">
             <CardContent>

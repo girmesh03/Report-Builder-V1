@@ -2,6 +2,9 @@
  * Audio upload controller.
  *
  * Handles authenticated audio file upload for a specific report.
+ * Duration metadata is informational only — no hard duration limit on upload.
+ * Long recordings exceeding Addis AI STT per-request duration (60s)
+ * are chunked by the STT service at transcription time.
  *
  * @module controllers/audio
  */
@@ -11,7 +14,6 @@ import fs from 'fs';
 import apiResponse from '../utils/apiResponse.js';
 import httpStatus from '../utils/httpStatus.js';
 import { attachAudioToReport } from '../services/audio.service.js';
-import { isValidAudioDuration } from '../utils/fileValidation.js';
 
 /**
  * Upload audio and attach it to a report.
@@ -31,15 +33,8 @@ export const uploadAudio = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const durationSeconds = req.body.durationSeconds ? parseFloat(req.body.durationSeconds) : undefined;
-  if (durationSeconds !== undefined && !isValidAudioDuration(durationSeconds)) {
-    cleanupFile(file.path);
-    apiResponse(res, httpStatus.BAD_REQUEST, 'Duration exceeds the 60-second limit');
-    return;
-  }
-
   const metadata = {
-    durationSeconds: durationSeconds || 0,
+    durationSeconds: req.body.durationSeconds ? parseFloat(req.body.durationSeconds) : 0,
     mimeType: req.body.mimeType || file.mimetype,
     recordedAt: req.body.recordedAt || new Date().toISOString(),
     languageCode: req.body.languageCode || 'am',
@@ -71,6 +66,7 @@ export const uploadAudio = asyncHandler(async (req, res, next) => {
  * Remove a file from disk.
  *
  * @param {string} filePath
+ * @returns {void}
  */
 function cleanupFile(filePath) {
   try {

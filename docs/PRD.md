@@ -58,6 +58,7 @@ Report Builder V1 enables an area supervisor to produce daily branch-visit repor
 - Backend sends audio to Addis AI STT.
 - Persist raw transcription, confidence, billed duration, request ID, language code, status.
 - User reviews and edits transcription before AI processing.
+- **Transcription accuracy is the highest priority quality metric.** The chunking pipeline (ffmpeg WAV conversion → PCM-level split) and correct chunk MIME type (`audio/wav` for converted chunks) are mandatory. Re-transcription must be available for accuracy verification. See RULES.md rules 13.21-13.25.
 
 ### AI Report Generation
 - Backend sends reviewed transcription plus structured prompt to Addis AI text generation.
@@ -88,7 +89,7 @@ Report Builder V1 enables an area supervisor to produce daily branch-visit repor
 - Backend proxy for all AI calls.
 - AI endpoints protected by authentication.
 - Rate limits on auth and AI endpoints.
-- Audio file type, size, and duration validated.
+- Audio file type and size validated server-side. Duration metadata is informational — no hard limit (long audio chunked by backend at STT time).
 - httpOnly cookies for auth tokens; secure cookies in production.
 - Environment variables for all secrets; .env files never committed.
 - `.env` files exist locally with placeholder values; they are NOT committed (ADR-006).

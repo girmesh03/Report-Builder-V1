@@ -9,8 +9,7 @@ import constants from '../utils/constants.js';
 /**
  * Validation rules for POST /api/v1/reports.
  *
- * Only date and branches are required. Title is not submitted
- * directly — the AI generates it from the audio content.
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const createReportRules = [
   body('reportDate')
@@ -30,6 +29,8 @@ export const createReportRules = [
 
 /**
  * Validation rules for PATCH /api/v1/reports/:id.
+ *
+ * @type {import('express-validator').ValidationChain[]}
  */
 export const updateReportRules = [
   body('reportDate')

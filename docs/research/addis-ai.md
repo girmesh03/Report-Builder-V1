@@ -75,7 +75,18 @@ Error shape: `{ status: "error", error: { code, message, param? } }`
 - Backend proxy only — no direct client calls to Addis AI.
 - Native Node fetch, FormData, Blob for HTTP calls.
 - Multer for receiving browser audio uploads.
-- Multiple ordered clips if audio exceeds 60 seconds.
+- Backend chunks long WAV audio (exceeding 60s) into smaller segments before STT. Frontend always sends a single upload per ADR-005.
 - Transcription review step is mandatory before report generation.
+
+## Phase 11: STT Integration Details
+
+- STT client: `backend/src/services/ai/addisAi.client.js` — base HTTP client with native `fetch`, `AbortController` timeout, `x-api-key` auth header, error mapping
+- STT service: `backend/src/services/ai/addisAiStt.service.js` — reads audio from disk via `fs.promises.readFile`, creates `FormData` with audio `Blob` and `request_data` JSON, posts to `/api/v2/stt`
+- Error mapping: `backend/src/services/ai/aiProviderErrors.js` — maps 401/403 to "configuration error", 429 to "busy/try again", 500/503 to "temporarily unavailable"
+- Route: `POST /api/v1/reports/:reportId/transcriptions` — authenticated, ownership-scoped
+- Frontend: `TranscriptionPanel.jsx` — request button, loading spinner, raw text display, confidence/duration metadata
+- Report status advances: `audio_recorded` → `transcribed`. Re-transcription allowed from `transcribed` for accuracy testing.
+- **Accuracy-critical implementation:** Chunks are WAV (pcm_s16le, 16kHz, mono) after ffmpeg conversion + PCM split. Blob `type` MUST be `audio/wav` — detected by `RIFF` header. Wrong MIME type = garbled transcription. See RULES.md rules 13.21-13.25.
+- No additional packages needed — all native Node APIs
 
 See [addis-ai-concrete-understanding.md](./addis-ai-concrete-understanding.md) for the full research document.

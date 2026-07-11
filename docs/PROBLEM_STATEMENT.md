@@ -58,6 +58,8 @@ The conversation language in the recorded audio is always Amharic.
 
 This is one of the main reasons Addis AI is selected. Addis AI is specialized in Ethiopian Amharic language and is expected to produce more accurate transcription and report generation than general AI tools that are not focused on Ethiopian language use cases.
 
+**Transcription accuracy is the foundation of the entire product.** Every subsequent step — AI report generation, export, review — depends on accurate transcription. Garbage transcription produces garbage reports. The chunking pipeline (ffmpeg WAV conversion → PCM-level split) and correct MIME type per chunk are critical safeguards. Re-transcription must be available to verify accuracy on every audio recording. See RULES.md rules 13.21-13.25.
+
 Even though Addis AI is specialized in Amharic, the system must still provide a concrete system prompt. The AI must not be expected to guess the required report style. The system prompt must clearly define:
 
 - The AI's responsibility.

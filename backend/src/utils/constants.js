@@ -54,6 +54,7 @@ const constants = Object.freeze({
     PENDING: 'pending',
     ON_PROGRESS: 'on_progress',
     COMPLETED: 'completed',
+    FAILED: 'failed',
   }),
 
   BRANCH: Object.freeze({

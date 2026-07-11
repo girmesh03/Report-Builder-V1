@@ -145,8 +145,8 @@ Documented constraints:
 
 Project use:
 
-- Keep each recorded clip under 60 seconds and 10 MB.
-- If the report needs longer audio, implement multiple ordered clips rather than one oversized file.
+- Frontend imposes no duration limit (ADR-005). Backend chunks long WAV recordings before STT. **Accuracy-critical:** The chunking pipeline converts full audio to WAV via ffmpeg (single pass, pcm_s16le, 16kHz, mono) before PCM-level split. Per-segment re-encoding causes Opus decoder priming artifacts that degrade transcription quality.
+- Per ADR-005, frontend sends a single upload; backend transparently chunks long audio at STT time.
 - The app should preserve the review step after transcription.
 - Do not skip the transcription review by sending raw audio directly to report generation.
 

@@ -14,7 +14,7 @@
 | 8  | Reports list/grid frontend             | Report list cards (Responsive grid), MUI Data Grid (server pagination), search, status/date filters, create report dialog with date/branch(es)/notes, post-create scaffold page. ✅ Implemented |
 | 9  | Audio recording frontend               | MediaRecorder, playback, discard, submit UI              | ✅ Implemented |
 | 10 | Audio upload backend                   | Multer, validation, audio metadata storage               | ✅ Implemented |
-| 11 | Addis AI speech-to-text integration    | STT service, transcription persistence                   |
+| 11 | Addis AI speech-to-text integration    | STT service, transcription persistence, chunked audio processing (ffmpeg WAV → PCM split), re-transcription for accuracy testing. **Accuracy-critical:** Correct chunk MIME type (`audio/wav`) is mandatory. See RULES.md rules 13.21-13.25 | ✅ Implemented |
 | 12 | Transcription review and AI generation | Review UI, text generation service, report generation    |
 | 13 | Report preview, edit, finalization     | Preview page, inline edits, status transitions           |
 | 14 | Export system                          | PDF, TXT, CSV, spreadsheet exports                       |

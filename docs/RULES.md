@@ -195,10 +195,15 @@
 - [ ] **13.14** Audio blob in component-local state (`useState` + `useRef`). Not persisted to Redux, redux-persist, or localStorage. [ADR-005:34]
 - [ ] **13.15** MIME type priority (ADR-005): `audio/webm;codecs=opus` → `audio/webm` → `audio/mp4` → browser default. [ADR-005:38-42]
 - [ ] **13.16** No multimodal audio for core V1 flow — use STT first because transcription review is required. [INITIAL_PROMPT:138, RESEARCH:195-196]
-- [ ] **13.17** Audio validation: file required, max 10 MB, max 60 seconds from client metadata, allowed MIME types. [PHASE10:51-63]
+- [ ] **13.17** Audio validation: file required, max 10 MB, allowed MIME types. Duration metadata is informational — no hard duration limit on upload. Long audio is chunked by backend at STT time. [PHASE10:51-63, ADR-005:30-31]
 - [ ] **13.18** Multer for receiving browser audio uploads. [PHASE10:64]
 - [ ] **13.19** Audio stored temporarily under `backend/uploads/audio/` with `.gitignore`. Uploaded files not committed. [PHASE10:64-65]
 - [ ] **13.20** Do not log raw audio, raw transcription, or generated reports in production. [INITIAL_PROMPT:315, PRD.md:83]
+- [ ] **13.21** **Transcription accuracy is the single most important quality metric.** Every implementation decision — chunking strategy, format conversion, MIME type, error handling — must prioritize transcription accuracy over convenience, performance, or code simplicity. [PHASE11-AUDIT]
+- [ ] **13.22** **Chunk MIME type MUST match actual buffer format.** After ffmpeg WAV conversion + PCM split, each chunk buffer contains a RIFF/WAVE header. The Blob's `type` MUST be set to `audio/wav` for these chunks. Using the original `audio/webm` type causes the provider to misinterpret the data, producing garbled transcription. This is a CRITICAL violation. [PHASE11-AUDIT]
+- [ ] **13.23** **The only approved chunking pipeline** for STT is: ffmpeg full-file WAV conversion (pcm_s16le, 16kHz, mono) → in-memory PCM-level WAV split via `wavSplitter.js`. Any alternative chunking approach that degrades accuracy (e.g., per-segment ffmpeg re-encoding, sending raw format without conversion) is forbidden unless proven to produce equivalent accuracy. [PHASE11-AUDIT]
+- [ ] **13.24** **Re-transcription MUST be available** so accuracy can be verified across multiple attempts. The backend must accept both `audio_recorded` and `transcribed` statuses. The frontend must show a "Re-transcribe" button on completed transcription. [PHASE11-AUDIT]
+- [ ] **13.25** **Accuracy regression is a blocking defect.** Any change to the STT pipeline (chunking, format conversion, MIME type, language code, provider endpoint) that degrades transcription quality must be reverted immediately. Accuracy must be verified with real Amharic audio before merging. [PHASE11-AUDIT]
 
 ## 14. Export Rules
 
@@ -260,7 +265,7 @@
 - [ ] **18.4** httpOnly cookies for auth tokens; `secure` cookies in production. [PRD.md:92]
 - [ ] **18.5** Rate limits on auth and AI endpoints. [PRD.md:90]
 - [ ] **18.6` `helmet`, `cors`, `compression`, `cookie-parser`, `express-mongo-sanitize`, `express-rate-limit` applied globally. [PHASE2-SUMMARY:55, ARCHITECTURE.md:85]
-- [ ] **18.7** Audio type, size, and duration validated server-side. [PRD.md:91]
+- [ ] **18.7** Audio type and size validated server-side. Duration metadata stored as informational — not enforced as a hard limit. Long audio chunked by backend for STT. [PRD.md:91, ADR-005:30-31]
 - [ ] **18.8** Safe logging: no passwords, tokens, raw cookies, secrets, raw audio, full transcription, or full generated reports. [INITIAL_PROMPT:315, PRD.md:83]
 - [ ] **18.9** No secret keys in frontend code, Vite env sent to browser, localStorage, Redux state, or client logs. [INITIAL_PROMPT:81-82]
 
