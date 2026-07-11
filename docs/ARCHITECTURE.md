@@ -30,6 +30,7 @@ backend/
       **profile.controller.js  Profile endpoints (get, update, change password)**
       **branch.controller.js   Branch CRUD with pagination and soft deactivation**
       **report.controller.js   Report CRUD with pagination and user ownership (plus monthly report compilation, date-range export)**
+      **audio.controller.js    Audio upload and metadata persistence**
     middleware/
       **security.middleware.js      Helmet, cors, compression, cookie-parser,
                                   mongo-sanitize, rate-limit**
@@ -38,6 +39,7 @@ backend/
       **notFound.middleware.js      404 handler**
       **auth.middleware.js          JWT authentication and role-based authorization**
       **validate.middleware.js      express-validator result handler**
+      **upload.middleware.js        Multer configuration for audio file upload**
     models/
       **user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)**
       **branch.model.js     Branch schema (name, code, branch, address, managerName, managerPhone, isActive)**
@@ -49,6 +51,7 @@ backend/
       **profile.routes.js Profile route definitions**
       **branch.routes.js  Branch route definitions (all authenticated)**
       **report.routes.js  Report route definitions (all authenticated, ownership enforced) — list, get, create, update, delete, monthly, export**
+      **audio.routes.js   Audio upload route (POST /reports/:reportId/audio)**
     services/
       **auth.service.js   Auth business logic (register, login, refresh)**
       **token.service.js  JWT access and refresh token generation/verification**
@@ -56,6 +59,7 @@ backend/
       **profile.service.js Profile business logic (get, update, change password)**
       **branch.service.js Branch CRUD with pagination, search, and soft deactivation**
       **report.service.js Report CRUD with pagination, filtering, user ownership, monthly compilation, date-range export**
+      **audio.service.js  Audio upload business logic (attach clip, advance status)**
     utils/
       **constants.js      Centralized constants (no magic values elsewhere)**
       **httpStatus.js     HTTP status code constants**
@@ -63,11 +67,13 @@ backend/
       **apiResponse.js    Standardised success response helper**
       **cookieOptions.js  httpOnly cookie configuration for access and refresh tokens**
       **logger.js         Structured logging utility**
+      **fileValidation.js Audio file type, size, and duration validation**
     validators/
       **auth.validators.js    express-validator rules for register and login**
       **profile.validators.js express-validator rules for profile update and password change**
       **branch.validators.js  express-validator rules for branch create and update**
       **report.validators.js  express-validator rules for report create and update**
+      **audio.validators.js   express-validator rules for audio upload metadata**
   mock/
     **index.js            Mock data injector/wiper (development only)**
   .env
@@ -131,7 +137,7 @@ client/
     hooks/            **useAudioRecorder** (MediaRecorder hook with idle/recording/recorded state machine)
     providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
     routes/           **Route guards (ProtectedRoute, PublicRoute)**
-    services/         **API client, auth API, profile API, reportsApi, branchesApi**
+    services/         **API client, auth API, profile API, reportsApi, branchesApi, audioApi**
     store/            **Redux store (auth slice, profile slice, reportsSlice, branchesSlice)**
     theme/            **MUI theme config (AppTheme, themePrimitives, customizations/)**
     utils/            **Constants, route paths**
