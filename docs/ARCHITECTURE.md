@@ -104,7 +104,7 @@ client/
   public/             Static assets
   src/
     components/
-      audio/          Audio recorder, playback, controls, meter, guidelines
+      audio/          **AudioRecorder, AudioPlayback, AudioRecordingControls, AudioRecordingMeter, AudioGuidelines**
       feedback/       **Toast, error boundary**
       layout/         **PublicLayout, PublicAppBar, AppShell, AppSidebar, AppTopbar, AppContent, GlobalSearchDialog**
       reusable/       MUI wrappers prefixed Mui
@@ -126,9 +126,9 @@ client/
       auth/           **Login, register, OAuth callback**
       dashboard/      **Dashboard landing page (summary cards + recent activity)**
       profile/        **Profile view and edit page (personal info + change password)**
-      reports/        **ReportsPage** (list/grid toggle, search, filters, pagination, create dialog) and **CreateReportPage** (post-create scaffold, audio recording placeholder)
+      reports/        **ReportsPage** (list/grid toggle, search, filters, pagination, create dialog) and **CreateReportPage** (metadata toggle, audio recording via AudioRecorder)
       errors/         **404 page**
-    hooks/            Custom hooks (useAudioRecorder)
+    hooks/            **useAudioRecorder** (MediaRecorder hook with idle/recording/recorded state machine)
     providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
     routes/           **Route guards (ProtectedRoute, PublicRoute)**
     services/         **API client, auth API, profile API, reportsApi, branchesApi**
@@ -162,8 +162,8 @@ client/
 - ReportsFilterDialog provides status select, branch select, date from/to (MuiDatePicker). Clear resets to empty defaults, applies, and closes.
 - reportMetadataDialog, branchesApi, reportsApi use apiClient with query string building for pagination/search params.
 - reportsSlice and branchesSlice manage report/branch state with createAsyncThunk, per-action loading/error states.
-- CreateReportPage displays report metadata summary and shows placeholder for audio recording (Phase 9). At `/reports/:id` route.
-- AudioRecorder (Phase 9) uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
+- CreateReportPage displays report metadata summary (collapsible toggle) and provides audio recording via AudioRecorder. At `/reports/:id` route.
+- AudioRecorder uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
 - AppSidebar responsive: permanent Drawer on `md+` (collapsible via MenuIcon), temporary Drawer on mobile (centered app name). Navigation items (Dashboard, Reports, Profile) at top with `justifyContent: 'space-between'`; Logout at bottom separated by Divider.
 - AppTopbar shows current page title (dynamic from route), search icon (opens GlobalSearchDialog), theme toggle (light/dark via `useColorScheme`), and user avatar dropdown with profile link and logout.
 - Dashboard displays summary cards (total/draft/generated reports) and recent activity placeholder.
