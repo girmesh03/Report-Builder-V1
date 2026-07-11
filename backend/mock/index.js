@@ -12,12 +12,13 @@
  */
 import mongoose from 'mongoose';
 import { config } from 'dotenv';
+import env from '../src/config/env.js';
 import { users as userData, branches as branchData, reports as reportData } from './data.js';
 
 config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/report-builder-v1';
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const MONGODB_URI = env.MONGODB_URI;
+const NODE_ENV = env.NODE_ENV;
 
 const args = process.argv.slice(2);
 const isInject = args.includes('--inject');

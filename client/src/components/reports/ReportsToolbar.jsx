@@ -53,15 +53,17 @@ function ReportsToolbar({
       action={
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Tooltip title="Filter">
-            <IconButton size="small" onClick={onFilterClick}>
-              <Badge
-                badgeContent={activeFilterCount}
-                color="primary"
-                size="small"
-              >
-                <FilterListIcon />
-              </Badge>
-            </IconButton>
+            <span>
+              <IconButton size="small" onClick={onFilterClick}>
+                <Badge
+                  badgeContent={activeFilterCount}
+                  color="primary"
+                  size="small"
+                >
+                  <FilterListIcon />
+                </Badge>
+              </IconButton>
+            </span>
           </Tooltip>
           <MuiButton
             variant="contained"

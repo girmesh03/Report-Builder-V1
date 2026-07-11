@@ -15,7 +15,7 @@
 | 9  | Audio recording frontend               | MediaRecorder, playback, discard, submit UI              | ✅ Implemented |
 | 10 | Audio upload backend                   | Multer, validation, audio metadata storage               | ✅ Implemented |
 | 11 | Addis AI speech-to-text integration    | STT service, transcription persistence, chunked audio processing (ffmpeg WAV → PCM split), re-transcription for accuracy testing. **Accuracy-critical:** Correct chunk MIME type (`audio/wav`) is mandatory. See RULES.md rules 13.21-13.25 | ✅ Implemented |
-| 12 | Transcription review and AI generation | Review UI, text generation service, report generation    |
+| 12 | Transcription review and AI generation | Review UI, text generation service, report generation                    | ✅ Implemented |
 | 13 | Report preview, edit, finalization     | Preview page, inline edits, status transitions           |
 | 14 | Export system                          | PDF, TXT, CSV, spreadsheet exports                       |
 | 15 | AI chat, translation, voice services   | Chat service, translate endpoint, TTS preparation        |

@@ -95,21 +95,27 @@ function AppTopbar({ onMenuToggle }) {
             {PAGE_TITLES[location.pathname] || "Report Builder"}
           </Typography>
           <Tooltip title="Search">
-            <IconButton onClick={() => setSearchOpen(true)} size="small" sx={{ ml: 1 }}>
-              <SearchIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={() => setSearchOpen(true)} size="small" sx={{ ml: 1 }}>
+                <SearchIcon />
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
-            <IconButton onClick={handleThemeToggle} size="small" sx={{ ml: 0.5 }}>
-              {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
+            <span>
+              <IconButton onClick={handleThemeToggle} size="small" sx={{ ml: 0.5 }}>
+                {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title="Account settings">
-            <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 0.5 }}>
-              <Avatar sx={{ width: 32, height: 32 }}>
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </Avatar>
-            </IconButton>
+            <span>
+              <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 0.5 }}>
+                <Avatar sx={{ width: 32, height: 32 }}>
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </Avatar>
+              </IconButton>
+            </span>
           </Tooltip>
           <Menu
             anchorEl={anchorEl}

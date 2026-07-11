@@ -33,6 +33,8 @@ import ReportStatusChip from '../../components/reports/ReportStatusChip.jsx';
 import AudioRecorder from '../../components/audio/AudioRecorder.jsx';
 import AudioGuidelines from '../../components/audio/AudioGuidelines.jsx';
 import TranscriptionPanel from '../../components/reports/TranscriptionPanel.jsx';
+import TranscriptionReviewEditor from '../../components/reports/TranscriptionReviewEditor.jsx';
+import GenerateReportPanel from '../../components/reports/GenerateReportPanel.jsx';
 import { getReport } from '../../services/reportsApi.js';
 import { uploadAudio } from '../../services/audioApi.js';
 
@@ -48,6 +50,8 @@ function CreateReportPage() {
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [transcribed, setTranscribed] = useState(false);
+  const [reviewed, setReviewed] = useState(false);
+  const [generated, setGenerated] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showTips, setShowTips] = useState(false);
 
@@ -62,6 +66,15 @@ function CreateReportPage() {
           setSubmitted(true);
           if (res.data.status === 'transcribed' || res.data.transcription?.status === 'completed') {
             setTranscribed(true);
+          }
+          if (res.data.status === 'transcription_reviewed') {
+            setTranscribed(true);
+            setReviewed(true);
+          }
+          if (res.data.status === 'generated') {
+            setTranscribed(true);
+            setReviewed(true);
+            setGenerated(true);
           }
         }
       })
@@ -101,6 +114,26 @@ function CreateReportPage() {
       setReport(updated.data);
     } catch {
       // Silently ignore — transcription data is already available
+    }
+  };
+
+  const handleReviewSaved = async () => {
+    setReviewed(true);
+    try {
+      const updated = await getReport(id);
+      setReport(updated.data);
+    } catch {
+      // Silently ignore
+    }
+  };
+
+  const handleGenerationComplete = async (_generatedData) => {
+    setGenerated(true);
+    try {
+      const updated = await getReport(id);
+      setReport(updated.data);
+    } catch {
+      // Silently ignore
     }
   };
 
@@ -246,10 +279,22 @@ function CreateReportPage() {
               reportId={id}
               onTranscriptionComplete={handleTranscriptionComplete}
             />
-            {transcribed && (
-              <Alert severity="info">
-                Transcription complete. Review and report generation will be available
-                in the next update.
+            {transcribed && !reviewed && (
+              <TranscriptionReviewEditor
+                reportId={id}
+                initialText={report.transcription?.text || ''}
+                onReviewSaved={handleReviewSaved}
+              />
+            )}
+            {reviewed && !generated && (
+              <GenerateReportPanel
+                reportId={id}
+                onGenerationComplete={handleGenerationComplete}
+              />
+            )}
+            {generated && (
+              <Alert severity="success">
+                Report generated successfully. Full preview and editing will be available in Phase 13.
               </Alert>
             )}
           </Stack>

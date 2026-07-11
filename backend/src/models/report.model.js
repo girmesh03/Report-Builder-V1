@@ -107,6 +107,15 @@ const reportSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+    reviewerUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     generatedReport: {
       type: generationSchema,
       default: () => ({}),

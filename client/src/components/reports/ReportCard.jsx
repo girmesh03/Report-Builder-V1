@@ -69,15 +69,19 @@ function ReportCard({ report, onView, onDelete, isDeleting }) {
       </CardContent>
       <CardActions sx={{ justifyContent: 'flex-end', px: 1, pb: 1 }}>
         <Tooltip title="View details">
-          <IconButton size="small" onClick={() => onView(report._id)}>
-            <OpenInNewIcon fontSize="small" />
-          </IconButton>
+          <span>
+            <IconButton size="small" onClick={() => onView(report._id)}>
+              <OpenInNewIcon fontSize="small" />
+            </IconButton>
+          </span>
         </Tooltip>
         {report.status === 'draft' && (
           <Tooltip title="Delete report">
-            <IconButton size="small" color="error" onClick={() => onDelete(report._id)} disabled={isDeleting}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <span>
+              <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => onDelete(report._id)} disabled={isDeleting}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </span>
           </Tooltip>
         )}
       </CardActions>

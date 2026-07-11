@@ -289,4 +289,6 @@ Project handling:
   - `ADDIS_AI_DEFAULT_TARGET_LANGUAGE=am`
   - `ADDIS_AI_STT_LANGUAGE_CODE=am`
   - `ADDIS_AI_TIMEOUT_MS=60000`
+  - `FFMPEG_PATH=/c/ffmpeg/ffmpeg` (or system ffmpeg path)
+  - `FFPROBE_PATH=/c/ffmpeg/ffprobe` (or system ffprobe path)
 

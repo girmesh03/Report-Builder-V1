@@ -31,6 +31,8 @@ backend/
       **branch.controller.js   Branch CRUD with pagination and soft deactivation**
       **report.controller.js   Report CRUD with pagination and user ownership (plus monthly report compilation, date-range export)**
       **audio.controller.js    Audio upload and metadata persistence**
+      **transcription.controller.js   STT transcription request**
+      **reportGeneration.controller.js   Reviewed transcription save and AI report generation**
     middleware/
       **security.middleware.js      Helmet, cors, compression, cookie-parser,
                                   mongo-sanitize, rate-limit**
@@ -43,7 +45,7 @@ backend/
     models/
       **user.model.js       User schema (name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt)**
       **branch.model.js     Branch schema (name, code, branch, address, managerName, managerPhone, isActive)**
-      **report.model.js     Report schema (user, reportDate, branches, status, supervisorName, audioClips, transcription, reviewedTranscription, generatedReport, editedReport, exportHistory)**
+      **report.model.js     Report schema (user, reportDate, branches, status, supervisorName, audioClips, transcription, reviewedTranscription, reviewedAt, reviewerUserId, generatedReport, editedReport, exportHistory)**
     routes/
       **index.js          Route aggregator**
       **health.routes.js  Health check route definitions**
@@ -53,6 +55,7 @@ backend/
       **report.routes.js  Report route definitions (all authenticated, ownership enforced) — list, get, create, update, delete, monthly, export**
       **audio.routes.js   Audio upload route (POST /reports/:reportId/audio)**
       **transcription.routes.js   Transcription route (POST /reports/:reportId/transcriptions)**
+      **reportGeneration.routes.js   Report generation routes (PATCH /reports/:reportId/transcriptions/review, POST /reports/:reportId/generate)**
     services/
       **auth.service.js   Auth business logic (register, login, refresh)**
       **token.service.js  JWT access and refresh token generation/verification**
@@ -61,10 +64,14 @@ backend/
       **branch.service.js Branch CRUD with pagination, search, and soft deactivation**
       **report.service.js Report CRUD with pagination, filtering, user ownership, monthly compilation, date-range export**
       **audio.service.js  Audio upload business logic (attach clip, advance status)**
+      **reportPrompt.service.js  Amharic report prompt builder with strict accuracy rules**
       ai/
-        **addisAi.client.js       Addis AI HTTP client (native fetch, timeout, error mapping)**
-        **addisAiStt.service.js   STT transcription service (forwards audio to Addis AI, persists result)**
-        **aiProviderErrors.js     Maps Addis AI error codes to safe user messages**
+        **addisAi.client.js         Addis AI HTTP client (native fetch, timeout, error mapping)**
+        **addisAiStt.service.js     STT transcription service (forwards audio to Addis AI, chunks long audio, persists result)**
+        **audioChunker.js           Format-agnostic audio chunking: ffmpeg WAV conversion + PCM-level split**
+        **wavSplitter.js            Pure-JS WAV PCM splitter (no re-encoding)**
+        **addisAiText.service.js    AI text generation service (forwards prompt to Addis AI chat_generate)**
+        **aiProviderErrors.js       Maps Addis AI error codes to safe user messages**
     utils/
       **constants.js      Centralized constants (no magic values elsewhere)**
       **httpStatus.js     HTTP status code constants**
@@ -73,12 +80,17 @@ backend/
       **cookieOptions.js  httpOnly cookie configuration for access and refresh tokens**
       **logger.js         Structured logging utility**
       **fileValidation.js Audio file type, size, and allowed MIME validation. Duration metadata stored as informational — no hard duration limit on upload. Long audio chunked by backend for STT.**
+      **promptVersions.js  AI prompt version tracking**
     validators/
       **auth.validators.js    express-validator rules for register and login**
       **profile.validators.js express-validator rules for profile update and password change**
       **branch.validators.js  express-validator rules for branch create and update**
       **report.validators.js  express-validator rules for report create and update**
       **audio.validators.js   express-validator rules for audio upload metadata**
+      **transcription.validators.js   express-validator rules for transcription request**
+      **reportGeneration.validators.js   express-validator rules for reviewed transcription save**
+  config/
+    **seedBranches.js       Auto-seeds 14 predefined Amharic branches on first startup**
   mock/
     **index.js            Mock data injector/wiper (development only)**
   .env
@@ -173,7 +185,7 @@ client/
 - ReportsFilterDialog provides status select, branch select, date from/to (MuiDatePicker). Clear resets to empty defaults, applies, and closes.
 - reportMetadataDialog, branchesApi, reportsApi use apiClient with query string building for pagination/search params.
 - reportsSlice and branchesSlice manage report/branch state with createAsyncThunk, per-action loading/error states.
-- CreateReportPage displays report metadata summary (collapsible toggle) and provides audio recording via AudioRecorder. At `/reports/:id` route.
+- CreateReportPage displays report metadata summary (collapsible toggle) and provides audio recording via AudioRecorder. At `/reports/:id` route. After audio upload, shows transcription panel (request, re-transcribe), transcription review editor (edit raw transcription, save reviewed), and generate report panel (trigger AI generation, show preview). Status progression: draft → audio_recorded → transcribed → transcription_reviewed → generated → finalized → exported.
 - AudioRecorder uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
 - AppSidebar responsive: permanent Drawer on `md+` (collapsible via MenuIcon), temporary Drawer on mobile (centered app name). Navigation items (Dashboard, Reports, Profile) at top with `justifyContent: 'space-between'`; Logout at bottom separated by Divider.
 - AppTopbar shows current page title (dynamic from route), search icon (opens GlobalSearchDialog), theme toggle (light/dark via `useColorScheme`), and user avatar dropdown with profile link and logout.
@@ -196,7 +208,7 @@ Over phases, these Mongoose models will be built:
 
 - **User** — name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt, timestamps. ✅ Implemented
 - **Branch** — name (enum from BRANCH_NAMES constant), code, branch, address, managerName, managerPhone, isActive, timestamps. Indexes: `{ code: 1 }` unique, `{ name: 1 }`. ✅ Implemented
-- **Report** — user, reportDate, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[] (filename, mimeType, size, duration, storagePath), transcription (text, confidence, languageCode, requestId, billedDuration, status), reviewedTranscription, generatedReport (text, modelVersion, promptVersion, finishReason, inputTokens, outputTokens, status), editedReport, exportHistory[] (format, exportedAt, filename), timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`. Monthly compilation at `GET /api/v1/reports/monthly?year=&month=` and date-range export at `GET /api/v1/reports/export?dateFrom=&dateTo=`. ✅ Implemented
+- **Report** — user, reportDate, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[] (filename, mimeType, size, duration, storagePath), transcription (text, confidence, languageCode, requestId, billedDuration, status), reviewedTranscription, reviewedAt, reviewerUserId, generatedReport (text, modelVersion, promptVersion, finishReason, inputTokens, outputTokens, status), editedReport, exportHistory[] (format, exportedAt, filename), timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`. Monthly compilation at `GET /api/v1/reports/monthly?year=&month=` and date-range export at `GET /api/v1/reports/export?dateFrom=&dateTo=`. ✅ Implemented
 - **AiGeneration** — report, provider, model, promptVersion, inputSnapshot, output, usageMetadata, finishReason, status
 
 ## Pagination
@@ -208,7 +220,9 @@ Branch and Report list endpoints use `mongoose-paginate-v2` with `page`, `limit`
 All Addis AI calls go through backend-only proxy services (`backend/src/services/ai/`):
 
 - **STT:** `POST /api/v2/stt` — receives browser audio → forwards as multipart/form-data (audio file + request_data JSON) → returns transcription. Implemented in `addisAiStt.service.js` via `addisAi.client.js` base client. **Accuracy-critical:** The chunking pipeline (ffmpeg WAV conversion → PCM-level WAV split) and correct MIME type per chunk (`audio/wav` for converted chunks) are mandatory. See RULES.md rules 13.21-13.25.
-- **Text generation:** sends reviewed transcription + structured prompt → returns report
+- **Text generation:** `POST /api/v1/chat_generate` — sends reviewed transcription + structured Amharic prompt → returns structured report. Implemented in `addisAiText.service.js`. Prompt built by `reportPrompt.service.js` with 18+ strict rules (Amharic word selection, information extraction, self-check). Model: `Addis-፩-አሌፍ`, temperature 0.2.
+- **Transcription review:** `PATCH /api/v1/reports/:reportId/transcriptions/review` — saves user-edited transcription, tracks reviewedAt + reviewerUserId, advances status to `transcription_reviewed`.
+- **Report generation:** `POST /api/v1/reports/:reportId/generate` — builds prompt from reviewed transcription, calls text generation, persists result, advances status to `generated`.
 - **TTS:** future scope
 - **Translation:** future scope
 - **Realtime:** future scope (backend-mediated WebSocket)
