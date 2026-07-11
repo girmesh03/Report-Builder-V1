@@ -19,15 +19,17 @@ import AudioPlayback from './AudioPlayback.jsx';
 import { formatFileSize, isOverSizeLimit, isSilentRecording } from '../../utils/audioUtils.js';
 
 /**
- * @param {object} props
- * @param {() => void} [props.onSubmit] - Called when user clicks submit with valid audio
- * @returns {JSX.Element}
- */
-function AudioRecorder({ onSubmit }) {
+  * @param {object} props
+  * @param {(data: { blob: Blob, duration: number, mimeType: string }) => void} [props.onSubmit] - Called when user clicks submit with valid audio
+  * @param {boolean} [props.disabled] - Disables submit button during upload
+  * @returns {JSX.Element}
+  */
+function AudioRecorder({ onSubmit, disabled }) {
   const {
     duration,
     error,
     mimeType,
+    audioBlob,
     audioUrl,
     fileSize,
     isIdle,
@@ -42,11 +44,11 @@ function AudioRecorder({ onSubmit }) {
 
   const overLimit = isRecorded && isOverSizeLimit(fileSize);
   const tooSmall = isRecorded && isSilentRecording(fileSize);
-  const canSubmit = isRecorded && !overLimit && !tooSmall;
+  const canSubmit = isRecorded && !overLimit && !tooSmall && !disabled;
 
   const handleSubmit = () => {
     if (onSubmit && canSubmit) {
-      onSubmit();
+      onSubmit({ blob: audioBlob, duration, mimeType });
     }
   };
 

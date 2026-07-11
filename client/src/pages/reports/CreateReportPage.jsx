@@ -33,6 +33,7 @@ import ReportStatusChip from '../../components/reports/ReportStatusChip.jsx';
 import AudioRecorder from '../../components/audio/AudioRecorder.jsx';
 import AudioGuidelines from '../../components/audio/AudioGuidelines.jsx';
 import { getReport } from '../../services/reportsApi.js';
+import { uploadAudio } from '../../services/audioApi.js';
 
 /**
  * @returns {JSX.Element}
@@ -44,6 +45,7 @@ function CreateReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showTips, setShowTips] = useState(false);
 
@@ -63,9 +65,17 @@ function CreateReportPage() {
       });
   }, [id]);
 
-  const handleAudioSubmit = () => {
-    toast.success('Audio recorded successfully. Upload will be available in the next update.');
-    setSubmitted(true);
+  const handleAudioSubmit = async ({ blob, duration, mimeType }) => {
+    setUploading(true);
+    try {
+      await uploadAudio(id, blob, { durationSeconds: duration, mimeType });
+      toast.success('Audio uploaded successfully.');
+      setSubmitted(true);
+    } catch (err) {
+      toast.error(err.message || 'Failed to upload audio. Please try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -211,7 +221,7 @@ function CreateReportPage() {
         ) : (
           <Card variant="outlined">
             <CardContent>
-              <AudioRecorder onSubmit={handleAudioSubmit} />
+              <AudioRecorder onSubmit={handleAudioSubmit} disabled={uploading} />
             </CardContent>
           </Card>
         )}
