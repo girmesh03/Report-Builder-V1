@@ -1,8 +1,8 @@
 /**
- * Audio playback component.
+ * Audio playback component for a list of clips.
  *
- * Play/pause toggle with progress bar, duration display,
- * and right-aligned discard/re-record/submit actions.
+ * Renders each clip with its own play/pause toggle, progress bar,
+ * duration display, and discard button.
  *
  * @module components/audio/AudioPlayback
  */
@@ -11,63 +11,68 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import MuiDialog from '../reusable/MuiDialog.jsx';
 import MuiButton from '../reusable/MuiButton.jsx';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { formatDuration, formatFileSize } from '../../utils/audioUtils.js';
+import { API_CONFIG } from '../../utils/constants.js';
+
+const AUDIO_BASE_URL = API_CONFIG.BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
 
 /**
  * @param {object} props
- * @param {string} props.audioUrl - Object URL of the recorded audio
- * @param {number} props.duration - Recording duration in seconds
- * @param {number} props.fileSize - File size in bytes
- * @param {boolean} props.canSubmit - Whether submit is allowed (under 10 MB)
- * @param {() => void} props.onSubmit - Submit handler
- * @param {() => void} props.onDiscard - Discard recording handler
- * @param {() => void} props.onReRecord - Re-record handler
+ * @param {Array<{ id: number|string, url: string, duration: number, fileSize?: number }>} props.clips - Array of clip objects
+ * @param {(id: number|string) => void} props.onDiscard - Discard handler for a clip
  * @returns {JSX.Element}
  */
-function AudioPlayback({
-  audioUrl,
-  duration,
-  fileSize,
-  canSubmit,
-  onSubmit,
-  onDiscard,
-  onReRecord,
-}) {
+function AudioPlayback({ clips, onDiscard }) {
+  if (!clips || clips.length === 0) return null;
+
+  return (
+    <Stack spacing={1.5}>
+      {clips.map((clip) => (
+        <ClipPlayer key={clip.id} clip={clip} onDiscard={onDiscard} />
+      ))}
+    </Stack>
+  );
+}
+
+/**
+ * Individual clip player with play/pause, progress, duration, and discard.
+ *
+ * @param {object} props
+ * @param {{ id: number|string, url: string, duration: number, fileSize?: number }} props.clip
+ * @param {(id: number|string) => void} props.onDiscard
+ */
+function ClipPlayer({ clip, onDiscard }) {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+    const audioUrl = clip.url.startsWith('http') ? clip.url : `${AUDIO_BASE_URL}${clip.url}`;
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+
+    audio.onended = () => {
+      setPlaying(false);
+      setCurrentTime(0);
     };
-  }, []);
 
-  useEffect(() => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onended = () => {
-        setPlaying(false);
-        setCurrentTime(0);
-      };
-
-      return () => {
-        audio.pause();
-        audio.src = '';
-      };
-    }
-  }, [audioUrl]);
+    return () => {
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+    };
+  }, [clip.url]);
 
   useEffect(() => {
     if (!playing) return;
@@ -92,125 +97,95 @@ function AudioPlayback({
       audio.pause();
       setPlaying(false);
     } else {
-      audio.play().catch(() => {
-        setPlaying(false);
-      });
+      audio.play().catch(() => setPlaying(false));
       setPlaying(true);
     }
   }, [playing]);
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = clip.duration > 0 ? (currentTime / clip.duration) * 100 : 0;
 
   return (
-    <Box>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{ alignItems: 'center', width: '100%' }}
-      >
-        <IconButton
-          onClick={togglePlayback}
-          aria-label={playing ? 'Pause' : 'Play'}
-          sx={{
-            width: 48,
-            height: 48,
-            bgcolor: 'primary.main',
-            color: 'common.white',
-            '&:hover': { bgcolor: 'primary.dark' },
-            flexShrink: 0,
-          }}
-        >
-          {playing ? <PauseIcon /> : <PlayArrowIcon />}
-        </IconButton>
-
-        <Box
-          sx={{
-            flex: 1,
-            height: 6,
-            bgcolor: 'action.hover',
-            borderRadius: 3,
-            overflow: 'hidden',
-            minWidth: 40,
-          }}
-        >
-          <Box
-            sx={{
-              width: `${progress}%`,
-              height: '100%',
-              bgcolor: 'primary.main',
-              borderRadius: 3,
-            }}
-          />
-        </Box>
-
-        <Typography
-          variant="caption"
-          fontFamily="monospace"
-          color="text.secondary"
-          sx={{ flexShrink: 0, whiteSpace: 'nowrap', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
-        >
-          {formatDuration(currentTime)} / {formatDuration(duration)}
-          {' \u00B7 '}
-          {formatFileSize(fileSize)}
-        </Typography>
-      </Stack>
-
-      <Stack
-        direction="row"
-        spacing={1}
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{ alignItems: 'center', width: '100%' }}
+    >
+      <IconButton
+        onClick={togglePlayback}
+        aria-label={playing ? 'Pause' : 'Play'}
         sx={{
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          mt: 2,
-          flexWrap: 'wrap',
-          gap: 1,
+          width: 36,
+          height: 36,
+          bgcolor: 'primary.main',
+          color: 'common.white',
+          '&:hover': { bgcolor: 'primary.dark' },
+          flexShrink: 0,
         }}
       >
-        <MuiButton
-          variant="outlined"
-          color="error"
-          size="small"
-          startIcon={<DeleteIcon />}
-          onClick={onDiscard}
-          aria-label="Discard recording"
+        {playing ? <PauseIcon sx={{ fontSize: 18 }} /> : <PlayArrowIcon sx={{ fontSize: 18 }} />}
+      </IconButton>
+
+      <Box
+        sx={{
+          flex: 1,
+          height: 4,
+          bgcolor: 'action.hover',
+          borderRadius: 2,
+          overflow: 'hidden',
+          minWidth: 40,
+        }}
+      >
+        <Box
           sx={{
-            minWidth: { xs: 36, sm: undefined },
-            px: { xs: 0.5, sm: 1 },
-            '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.5 } },
+            width: `${progress}%`,
+            height: '100%',
+            bgcolor: 'primary.main',
+            borderRadius: 2,
           }}
-        >
-          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+        />
+      </Box>
+
+      <Typography
+        variant="caption"
+        fontFamily="monospace"
+        color="text.secondary"
+        sx={{ flexShrink: 0, whiteSpace: 'nowrap', fontSize: '0.65rem' }}
+      >
+        {formatDuration(currentTime)} / {formatDuration(clip.duration)}
+        {clip.fileSize ? ` · ${formatFileSize(clip.fileSize)}` : ''}
+      </Typography>
+
+      <Tooltip title="Discard clip">
+        <span>
+          <IconButton
+            size="small"
+            onClick={() => setConfirmOpen(true)}
+            aria-label="Discard clip"
+            sx={{ color: 'error.main' }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+
+      <MuiDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+      >
+        <DialogTitle>Discard Recording</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to discard this audio recording? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MuiButton onClick={() => setConfirmOpen(false)} color="inherit" size="small">Cancel</MuiButton>
+          <MuiButton onClick={() => { setConfirmOpen(false); onDiscard(clip.id); }} color="error" variant="contained" size="small">
             Discard
-          </Box>
-        </MuiButton>
-        <MuiButton
-          variant="outlined"
-          size="small"
-          startIcon={<RefreshIcon />}
-          onClick={onReRecord}
-          aria-label="Re-record"
-          sx={{
-            minWidth: { xs: 36, sm: undefined },
-            px: { xs: 0.5, sm: 1 },
-            '& .MuiButton-startIcon': { mr: { xs: 0, sm: 0.5 } },
-          }}
-        >
-          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Re-record
-          </Box>
-        </MuiButton>
-        <MuiButton
-          variant="contained"
-          size="small"
-          startIcon={<CheckCircleIcon />}
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          aria-label="Submit recording"
-        >
-          Submit
-        </MuiButton>
-      </Stack>
-    </Box>
+          </MuiButton>
+        </DialogActions>
+      </MuiDialog>
+    </Stack>
   );
 }
 

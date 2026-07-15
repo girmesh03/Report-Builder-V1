@@ -14,9 +14,10 @@ import validate from '../middleware/validate.middleware.js';
 
 const router = Router({ mergeParams: true });
 
+router.use(authenticate);
+
 router.patch(
   '/transcriptions/review',
-  authenticate,
   saveReviewedTranscriptionRules,
   validate,
   saveReviewedTranscription,
@@ -24,7 +25,6 @@ router.patch(
 
 router.post(
   '/generate',
-  authenticate,
   generateReport,
 );
 

@@ -84,10 +84,9 @@ function AppTopbar({ onMenuToggle }) {
       >
         <Toolbar>
           <IconButton
-            color="inherit"
             edge="start"
             onClick={onMenuToggle}
-            sx={{ mr: 1, display: { md: "none" } }}
+            sx={{ mr: 1, display: { md: "none" }, color: 'inherit' }}
           >
             <MenuIcon />
           </IconButton>

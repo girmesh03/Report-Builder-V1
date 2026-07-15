@@ -72,6 +72,54 @@ export const deleteReport = createAsyncThunk(
   },
 );
 
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const archiveReport = createAsyncThunk(
+  'reports/archiveReport',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await reportsApi.archiveReport(id);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const recoverReport = createAsyncThunk(
+  'reports/recoverReport',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await reportsApi.recoverReport(id);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const permanentDeleteReport = createAsyncThunk(
+  'reports/permanentDeleteReport',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await reportsApi.permanentDeleteReport(id);
+      return { id, ...response.data };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   reports: [],
   totalDocs: 0,
@@ -82,8 +130,16 @@ const initialState = {
   error: null,
   createLoading: false,
   createError: null,
+  updateLoading: false,
+  updateError: null,
   deleteLoading: false,
   deleteError: null,
+  archiveLoading: false,
+  archiveError: null,
+  recoverLoading: false,
+  recoverError: null,
+  permanentDeleteLoading: false,
+  permanentDeleteError: null,
 };
 
 const reportsSlice = createSlice({
@@ -122,23 +178,27 @@ const reportsSlice = createSlice({
         state.createLoading = true;
         state.createError = null;
       })
-      .addCase(createReport.fulfilled, (state) => {
+      .addCase(createReport.fulfilled, (state, action) => {
         state.createLoading = false;
+        state.reports = [action.payload, ...state.reports];
       })
       .addCase(createReport.rejected, (state, action) => {
         state.createLoading = false;
         state.createError = action.payload;
       })
       .addCase(updateReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.updateLoading = true;
+        state.updateError = null;
       })
-      .addCase(updateReport.fulfilled, (state) => {
-        state.loading = false;
+      .addCase(updateReport.fulfilled, (state, action) => {
+        state.updateLoading = false;
+        state.reports = state.reports.map((r) =>
+          r._id === action.payload?._id ? action.payload : r,
+        );
       })
       .addCase(updateReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+        state.updateLoading = false;
+        state.updateError = action.payload;
       })
       .addCase(deleteReport.pending, (state) => {
         state.deleteLoading = true;
@@ -151,6 +211,46 @@ const reportsSlice = createSlice({
       .addCase(deleteReport.rejected, (state, action) => {
         state.deleteLoading = false;
         state.deleteError = action.payload;
+      })
+      .addCase(archiveReport.pending, (state) => {
+        state.archiveLoading = true;
+        state.archiveError = null;
+      })
+      .addCase(archiveReport.fulfilled, (state, action) => {
+        state.archiveLoading = false;
+        state.reports = state.reports.map((r) =>
+          r._id === action.payload?._id ? action.payload : r,
+        );
+      })
+      .addCase(archiveReport.rejected, (state, action) => {
+        state.archiveLoading = false;
+        state.archiveError = action.payload;
+      })
+      .addCase(recoverReport.pending, (state) => {
+        state.recoverLoading = true;
+        state.recoverError = null;
+      })
+      .addCase(recoverReport.fulfilled, (state, action) => {
+        state.recoverLoading = false;
+        state.reports = state.reports.map((r) =>
+          r._id === action.payload?._id ? action.payload : r,
+        );
+      })
+      .addCase(recoverReport.rejected, (state, action) => {
+        state.recoverLoading = false;
+        state.recoverError = action.payload;
+      })
+      .addCase(permanentDeleteReport.pending, (state) => {
+        state.permanentDeleteLoading = true;
+        state.permanentDeleteError = null;
+      })
+      .addCase(permanentDeleteReport.fulfilled, (state, action) => {
+        state.permanentDeleteLoading = false;
+        state.reports = state.reports.filter((r) => r._id !== action.payload.id);
+      })
+      .addCase(permanentDeleteReport.rejected, (state, action) => {
+        state.permanentDeleteLoading = false;
+        state.permanentDeleteError = action.payload;
       });
   },
 });

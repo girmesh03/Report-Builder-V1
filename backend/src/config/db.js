@@ -8,20 +8,26 @@ import env from './env.js';
 import logger from '../utils/logger.js';
 import seedBranches from './seedBranches.js';
 
+const RECONNECT_INTERVAL_MS = 5000;
+
 /**
- * Connects to MongoDB and handles connection events.
+ * Connects to MongoDB with unlimited retries until successful.
  * Auto-seeds predefined branches on first run.
  *
  * @returns {Promise<void>}
  */
 const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(env.MONGODB_URI);
-    logger.info(`MongoDB connected: ${conn.connection.host}`);
-    await seedBranches();
-  } catch (error) {
-    logger.error('MongoDB connection failed', { error: error.message });
-    process.exit(1);
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      const conn = await mongoose.connect(env.MONGODB_URI);
+      logger.info(`MongoDB connected: ${conn.connection.host}`);
+      await seedBranches();
+      break;
+    } catch (error) {
+      logger.error('MongoDB connection failed — retrying in 5s', { error: error.message });
+      await new Promise((resolve) => setTimeout(resolve, RECONNECT_INTERVAL_MS));
+    }
   }
 
   mongoose.connection.on('error', (err) => {

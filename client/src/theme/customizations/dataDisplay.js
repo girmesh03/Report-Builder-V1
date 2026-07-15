@@ -234,4 +234,4 @@ const dataDisplayCustomizations = {
   },
 };
 
-export default dataDisplayCustomizations
+export default dataDisplayCustomizations;

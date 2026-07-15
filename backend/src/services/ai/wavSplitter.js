@@ -1,9 +1,11 @@
 /**
- * WAV audio splitter — pure-JS PCM-level splitting.
+ * WAV audio splitter — pure-JS PCM-level splitting with overlap support.
  *
  * Splits a decoded WAV buffer (PCM format, any sample rate/channels)
- * into fixed-duration chunks at exact byte boundaries. No re-encoding
- * needed — each chunk gets a valid RIFF/WAVE header.
+ * into fixed-duration chunks at exact byte boundaries. Adjacent chunks
+ * can overlap by a configurable duration to avoid losing context at
+ * boundaries. No re-encoding needed — each chunk gets a valid RIFF/WAVE
+ * header.
  *
  * @module services/ai/wavSplitter
  */
@@ -17,16 +19,18 @@ const PCM_FORMAT = 1;
  */
 
 /**
- * Split a WAV buffer into chunks of at most `maxDuration` seconds.
+ * Split a WAV buffer into chunks of at most `maxDuration` seconds
+ * with optional overlap between adjacent chunks.
  *
  * Only raw PCM WAV (format code 1) is supported. Non-PCM input
  * is returned as a single unsplit chunk.
  *
  * @param {Buffer} wavBuffer - Full decoded WAV buffer
  * @param {number} maxDuration - Maximum seconds per chunk
+ * @param {number} [overlapSeconds=0] - Seconds of overlap between adjacent chunks
  * @returns {WavChunk[]}
  */
-export function splitWavPcm(wavBuffer, maxDuration) {
+export function splitWavPcm(wavBuffer, maxDuration, overlapSeconds = 0) {
   if (!isWav(wavBuffer)) {
     return [{ buffer: wavBuffer, index: 0 }];
   }
@@ -49,13 +53,17 @@ export function splitWavPcm(wavBuffer, maxDuration) {
   }
 
   const bytesPerChunk = Math.floor(maxDuration * bytesPerSecond);
-  const chunkCount = Math.ceil(data.size / bytesPerChunk);
+  const overlapBytes = Math.floor(overlapSeconds * bytesPerSecond);
+  const stride = bytesPerChunk - overlapBytes;
+  const chunkCount = Math.ceil((data.size - bytesPerChunk) / stride) + 1;
   const chunks = [];
 
   for (let i = 0; i < chunkCount; i++) {
-    const start = i * bytesPerChunk;
+    const start = i * stride;
     const end = Math.min(start + bytesPerChunk, data.size);
     const chunkDataSize = end - start;
+
+    if (chunkDataSize <= 0) break;
 
     chunks.push({
       buffer: buildWavHeader(fmt, chunkDataSize, wavBuffer, data.offset + start),

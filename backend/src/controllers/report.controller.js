@@ -151,3 +151,84 @@ export const exportReportsByDate = asyncHandler(async (req, res) => {
 
   apiResponse(res, httpStatus.OK, 'Reports exported', result);
 });
+
+/**
+ * Archive a report (soft delete with 30-day auto-delete deadline).
+ *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
+ * @route PATCH /api/v1/reports/:id/archive
+ */
+export const archiveReport = asyncHandler(async (req, res, next) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const report = await reportService.archiveReport(
+      req.params.id,
+      req.user._id.toString(),
+      { session },
+    );
+    await session.commitTransaction();
+    apiResponse(res, httpStatus.OK, 'Report archived', report);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+});
+
+/**
+ * Recover an archived report, restoring its previous status.
+ *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
+ * @route POST /api/v1/reports/:id/recover
+ */
+export const recoverReport = asyncHandler(async (req, res, next) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const report = await reportService.recoverReport(
+      req.params.id,
+      req.user._id.toString(),
+      { session },
+    );
+    await session.commitTransaction();
+    apiResponse(res, httpStatus.OK, 'Report recovered', report);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+});
+
+/**
+ * Permanently delete a report and its audio files.
+ *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
+ * @route DELETE /api/v1/reports/:id/permanent
+ */
+export const permanentDeleteReport = asyncHandler(async (req, res, next) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const report = await reportService.permanentDeleteReport(
+      req.params.id,
+      req.user._id.toString(),
+      { session },
+    );
+    await session.commitTransaction();
+    apiResponse(res, httpStatus.OK, 'Report permanently deleted', report);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+});

@@ -49,7 +49,7 @@ const surfacesCustomizations = {
   },
   MuiAccordionDetails: {
     styleOverrides: {
-      root: { mb: 20, border: "none" },
+      root: { marginBottom: 20, border: "none" },
     },
   },
   MuiPaper: {

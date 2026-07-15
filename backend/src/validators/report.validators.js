@@ -3,7 +3,7 @@
  *
  * @module validators/report
  */
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 import constants from '../utils/constants.js';
 
 /**
@@ -58,4 +58,31 @@ export const updateReportRules = [
   body('editedReport')
     .optional()
     .trim(),
+];
+
+/**
+ * Validation rules for PATCH /api/v1/reports/:id/archive.
+ *
+ * @type {import('express-validator').ValidationChain[]}
+ */
+export const archiveReportRules = [
+  param('id').isMongoId().withMessage('Invalid report ID'),
+];
+
+/**
+ * Validation rules for POST /api/v1/reports/:id/recover.
+ *
+ * @type {import('express-validator').ValidationChain[]}
+ */
+export const recoverReportRules = [
+  param('id').isMongoId().withMessage('Invalid report ID'),
+];
+
+/**
+ * Validation rules for DELETE /api/v1/reports/:id/permanent.
+ *
+ * @type {import('express-validator').ValidationChain[]}
+ */
+export const permanentDeleteReportRules = [
+  param('id').isMongoId().withMessage('Invalid report ID'),
 ];

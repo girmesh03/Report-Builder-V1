@@ -16,19 +16,22 @@ import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
 import TranscribeIcon from '@mui/icons-material/Transcribe';
 import ReplayIcon from '@mui/icons-material/Replay';
+import ReviewIcon from '@mui/icons-material/RateReview';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import MuiButton from '../reusable/MuiButton.jsx';
 import CircularProgress from '@mui/material/CircularProgress';
-import { requestTranscription } from '../../services/transcriptionApi.js';
+import { requestTranscription, reviewTranscriptionByAI } from '../../services/transcriptionApi.js';
 
 /**
  * @param {object} props
  * @param {string} props.reportId - Report ID
  * @param {function} props.onTranscriptionComplete - Called with transcription data
+ * @param {function} props.onAiReviewComplete - Called with AI review result
  * @returns {JSX.Element}
  */
-function TranscriptionPanel({ reportId, onTranscriptionComplete }) {
+function TranscriptionPanel({ reportId, onTranscriptionComplete, onAiReviewComplete }) {
   const [transcribing, setTranscribing] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [transcription, setTranscription] = useState(null);
   const [error, setError] = useState(null);
 
@@ -46,6 +49,23 @@ function TranscriptionPanel({ reportId, onTranscriptionComplete }) {
       setError(err.message);
     } finally {
       setTranscribing(false);
+    }
+  };
+
+  const handleReviewByAI = async () => {
+    if (!transcription?.text) return;
+    setReviewing(true);
+    setError(null);
+    try {
+      const res = await reviewTranscriptionByAI(reportId, transcription.text);
+      const data = res?.data;
+      if (onAiReviewComplete) {
+        onAiReviewComplete(data);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setReviewing(false);
     }
   };
 
@@ -132,14 +152,25 @@ function TranscriptionPanel({ reportId, onTranscriptionComplete }) {
               )}
             </Stack>
 
-            <MuiButton
-              variant="outlined"
-              onClick={handleTranscribe}
-              startIcon={<ReplayIcon />}
-              size="small"
-            >
-              Re-transcribe
-            </MuiButton>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+              <MuiButton
+                variant="outlined"
+                onClick={handleTranscribe}
+                startIcon={<ReplayIcon />}
+                size="small"
+              >
+                Re-transcribe
+              </MuiButton>
+              <MuiButton
+                variant="contained"
+                onClick={handleReviewByAI}
+                disabled={reviewing}
+                startIcon={reviewing ? <CircularProgress size={16} /> : <ReviewIcon />}
+                size="small"
+              >
+                {reviewing ? 'Reviewing...' : 'Review by AI'}
+              </MuiButton>
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

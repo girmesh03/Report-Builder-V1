@@ -52,17 +52,30 @@ export const saveReviewedTranscription = asyncHandler(async (req, res, next) => 
       throw new ApiError(httpStatus.NOT_FOUND, 'Report not found');
     }
 
-    if (report.status !== constants.REPORT_STATUS.TRANSCRIBED) {
+    if (
+      report.status !== constants.REPORT_STATUS.TRANSCRIBED &&
+      report.status !== constants.REPORT_STATUS.TRANSCRIPTION_REVIEWED &&
+      report.status !== constants.REPORT_STATUS.GENERATED &&
+      report.status !== constants.REPORT_STATUS.FINALIZED
+    ) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        `Cannot review transcription in status "${report.status}". Report must be in "transcribed" status.`
+        `Cannot review transcription in status "${report.status}". Report must be in "transcribed", "transcription_reviewed", "generated", or "finalized" status.`
       );
     }
+
+    const hadGenerated =
+      report.status === constants.REPORT_STATUS.GENERATED ||
+      report.status === constants.REPORT_STATUS.FINALIZED;
 
     report.reviewedTranscription = req.body.reviewedTranscription;
     report.reviewedAt = new Date();
     report.reviewerUserId = req.user._id;
     report.status = constants.REPORT_STATUS.TRANSCRIPTION_REVIEWED;
+
+    if (hadGenerated) {
+      report.generatedReport = { status: constants.TASK_STATUS.PENDING };
+    }
 
     await report.save({ session });
     await session.commitTransaction();
@@ -107,10 +120,15 @@ export const generateReport = asyncHandler(async (req, res, next) => {
       throw new ApiError(httpStatus.NOT_FOUND, 'Report not found');
     }
 
-    if (report.status !== constants.REPORT_STATUS.TRANSCRIPTION_REVIEWED) {
+    if (
+      report.status !== constants.REPORT_STATUS.TRANSCRIPTION_REVIEWED &&
+      report.status !== constants.REPORT_STATUS.GENERATED &&
+      report.status !== constants.REPORT_STATUS.FINALIZED
+    ) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        `Cannot generate report in status "${report.status}". Review transcription first.`
+        `Cannot generate report in status "${report.status}". Review transcription first.`,
+        'Please review the transcription before generating the report.'
       );
     }
 
@@ -122,7 +140,7 @@ export const generateReport = asyncHandler(async (req, res, next) => {
     }
 
     // Commit transaction before long-running AI call
-    session.commitTransaction();
+    await session.commitTransaction();
 
     const { prompt, promptVersion } = buildReportPrompt(report, report.reviewedTranscription);
 

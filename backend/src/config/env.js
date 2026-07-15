@@ -24,7 +24,7 @@ const env = Object.freeze({
   ADDIS_AI_STT_MODEL: process.env.ADDIS_AI_STT_MODEL || '',
   ADDIS_AI_DEFAULT_TARGET_LANGUAGE: process.env.ADDIS_AI_DEFAULT_TARGET_LANGUAGE || 'am',
   ADDIS_AI_STT_LANGUAGE_CODE: process.env.ADDIS_AI_STT_LANGUAGE_CODE || 'am',
-  ADDIS_AI_TIMEOUT_MS: parseInt(process.env.ADDIS_AI_TIMEOUT_MS, 10) || 60000,
+  ADDIS_AI_TIMEOUT_MS: parseInt(process.env.ADDIS_AI_TIMEOUT_MS, 10) || 120000,
   FFMPEG_PATH: process.env.FFMPEG_PATH || 'ffmpeg',
   FFPROBE_PATH: process.env.FFPROBE_PATH || 'ffprobe',
 

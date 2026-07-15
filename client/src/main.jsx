@@ -27,6 +27,8 @@ import DashboardPage from "./pages/dashboard/DashboardPage.jsx";
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import ReportsPage from "./pages/reports/ReportsPage.jsx";
 import CreateReportPage from "./pages/reports/CreateReportPage.jsx";
+import ReportPreviewPage from "./pages/reports/ReportPreviewPage.jsx";
+import EditReportPage from "./pages/reports/EditReportPage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -57,6 +59,8 @@ const router = createBrowserRouter([
               { path: "dashboard", element: <DashboardPage /> },
               { path: "reports", element: <ReportsPage /> },
               { path: "reports/:id", element: <CreateReportPage /> },
+              { path: "reports/:id/edit", element: <EditReportPage /> },
+              { path: "reports/:id/preview", element: <ReportPreviewPage /> },
               { path: "profile", element: <ProfilePage /> },
             ],
           },
@@ -70,7 +74,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <LocalizationProvider
+        dateAdapter={AdapterDayjs}
+      >
         <RouterProvider router={router} />
       </LocalizationProvider>
     </Provider>

@@ -1,5 +1,5 @@
 /**
- * Audio chunking utility — convert then split.
+ * Audio chunking utility — always convert then split.
  *
  * Strategy (avoids per-segment re-encoding artifacts):
  *   1. Use ffmpeg to convert the ENTIRE file to WAV in a single pass
@@ -7,8 +7,9 @@
  *   2. Use the pure-JS WAV splitter to divide the decoded PCM
  *      into fixed-duration chunks at exact byte boundaries.
  *
- * This avoids the Opus-decoder-priming artifact that occurs when
- * ffmpeg's segment muxer re-encodes each chunk independently.
+ * Always converts to WAV first, even for files under the chunk duration,
+ * because the STT API works best with clean 16kHz PCM mono input rather
+ * than the browser's lossy compressed formats (Opus/AAC).
  *
  * ffmpeg must be installed and on PATH or at FFMPEG_PATH / FFPROBE_PATH.
  *
@@ -30,20 +31,17 @@ import env from '../../config/env.js';
  */
 
 /**
- * Split an audio file into chunks of at most `maxDuration` seconds.
+ * Convert audio to WAV then split into chunks.
+ *
+ * Every file is first converted to 16-bit PCM 16kHz mono WAV via ffmpeg
+ * before being split. This guarantees consistent input quality to the STT API.
  *
  * @param {string} filePath - Path to the audio file on disk
  * @param {number} [maxDuration=STT_CHUNK_DURATION_SECONDS] - Max seconds per chunk
+ * @param {number} [overlapSeconds=2] - Seconds of overlap between adjacent chunks
  * @returns {Promise<AudioChunk[]>}
  */
-export async function chunkAudio(filePath, maxDuration = STT_CHUNK_DURATION_SECONDS) {
-  const actualDuration = await getDuration(filePath);
-
-  if (actualDuration <= maxDuration) {
-    const buffer = await readFile(filePath);
-    return [{ buffer, index: 0 }];
-  }
-
+export async function chunkAudio(filePath, maxDuration = STT_CHUNK_DURATION_SECONDS, overlapSeconds = 2) {
   const wavPath = await convertToWav(filePath);
   let wavBuffer;
   try {
@@ -52,36 +50,7 @@ export async function chunkAudio(filePath, maxDuration = STT_CHUNK_DURATION_SECO
     await unlink(wavPath).catch(() => {});
   }
 
-  return splitWavPcm(wavBuffer, maxDuration);
-}
-
-/**
- * Detect audio duration in seconds using ffprobe.
- *
- * @param {string} filePath - Path to audio file
- * @returns {Promise<number>} Duration in seconds
- * @throws {Error} If ffprobe fails or output is unparseable
- */
-function getDuration(filePath) {
-  return new Promise((resolve, reject) => {
-    execFile(env.FFPROBE_PATH, [
-      '-v', 'quiet',
-      '-show_entries', 'format=duration',
-      '-of', 'csv=p=0',
-      filePath,
-    ], { timeout: 10000 }, (err, stdout) => {
-      if (err) {
-        reject(new Error(`ffprobe failed: ${err.message}`));
-        return;
-      }
-      const secs = parseFloat(stdout.trim());
-      if (isNaN(secs)) {
-        reject(new Error('Could not determine audio duration'));
-        return;
-      }
-      resolve(secs);
-    });
-  });
+  return splitWavPcm(wavBuffer, maxDuration, overlapSeconds);
 }
 
 /**

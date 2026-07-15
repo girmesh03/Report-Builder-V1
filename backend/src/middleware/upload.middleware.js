@@ -10,13 +10,14 @@ import multer from 'multer';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import constants from '../utils/constants.js';
 import { isAllowedAudioMime, MAX_AUDIO_SIZE } from '../utils/fileValidation.js';
 import ApiError from '../utils/apiError.js';
 import httpStatus from '../utils/httpStatus.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadsDir = path.resolve(__dirname, '../../uploads/audio');
+const uploadsDir = path.resolve(__dirname, constants.AUDIO_UPLOAD_PATH || '../../uploads/audio');
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {

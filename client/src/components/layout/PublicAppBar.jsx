@@ -63,8 +63,8 @@ function PublicAppBar() {
         </Box>
         <IconButton
           onClick={toggleTheme}
-          color="inherit"
           aria-label="Toggle theme"
+          sx={{ color: 'text.primary' }}
         >
           {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
         </IconButton>

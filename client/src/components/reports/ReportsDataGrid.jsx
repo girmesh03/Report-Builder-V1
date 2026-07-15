@@ -23,6 +23,9 @@ import dayjs from 'dayjs';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import MuiButton from '../reusable/MuiButton.jsx';
 import MuiDataGrid from '../reusable/MuiDataGrid.jsx';
 import ReportStatusChip from './ReportStatusChip.jsx';
@@ -61,15 +64,16 @@ function DataGridErrorFallback({ error, resetErrorBoundary }) {
  * @param {function} onView
  * @param {function} onEdit
  * @param {function} onDelete
+ * @param {function} onArchive
+ * @param {function} onRecover
+ * @param {function} onPermanentDelete
  * @param {boolean} isDeleting
+ * @param {boolean} [showArchived=false]
  * @returns {JSX.Element}
  */
-function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, onPageChange, onView, onEdit, onDelete, isDeleting }) {
+function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, onPageChange, onView, onEdit, onDelete, onArchive, onRecover, onPermanentDelete, isDeleting, showArchived = false }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const handlePageChange = useCallback((newPage) => {
-    onPageChange(newPage + 1);
-  }, [onPageChange]);
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState(null);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteTarget) {
@@ -77,6 +81,13 @@ function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, on
       setDeleteTarget(null);
     }
   }, [deleteTarget, onDelete]);
+
+  const handleConfirmPermanentDelete = useCallback(() => {
+    if (permanentDeleteTarget) {
+      onPermanentDelete(permanentDeleteTarget);
+      setPermanentDeleteTarget(null);
+    }
+  }, [permanentDeleteTarget, onPermanentDelete]);
 
   const columns = [
     {
@@ -106,39 +117,73 @@ function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, on
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 120,
+      width: showArchived ? 160 : 160,
       sortable: false,
       filterable: false,
-      renderCell: ({ row }) => (
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'center' }}>
-          <Tooltip title="View report">
-            <span>
-              <IconButton size="small" sx={{ color: 'primary.main' }} onClick={() => onView(row._id)}>
-                <OpenInNewIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip title="Edit report">
-            <span>
-              <IconButton size="small" sx={{ color: 'warning.main' }} onClick={() => onEdit(row)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip title="Delete report">
-            <span>
-              <IconButton
-                size="small"
-                sx={{ color: 'error.main' }}
-                onClick={() => setDeleteTarget(row._id)}
-                disabled={row.status !== 'draft' || isDeleting}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Stack>
-      ),
+      renderCell: ({ row }) => {
+        const isArchived = row.archivedAt || row.status === 'archived';
+
+        return (
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'center' }}>
+            {isArchived ? (
+              <>
+                <Tooltip title="Recover report">
+                  <span>
+                    <IconButton size="small" sx={{ color: 'success.main' }} onClick={() => onRecover(row._id)}>
+                      <UnarchiveIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Permanently delete">
+                  <span>
+                    <IconButton size="small" sx={{ color: 'error.main' }} onClick={() => setPermanentDeleteTarget(row._id)}>
+                      <DeleteForeverIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                <Tooltip title="View report">
+                  <span>
+                    <IconButton size="small" sx={{ color: 'primary.main' }} onClick={() => onView(row._id)}>
+                      <OpenInNewIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Edit report">
+                  <span>
+                    <IconButton size="small" sx={{ color: 'warning.main' }} onClick={() => onEdit(row)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Delete report">
+                  <span>
+                    <IconButton
+                      size="small"
+                      sx={{ color: 'error.main' }}
+                      onClick={() => setDeleteTarget(row._id)}
+                      disabled={row.status !== 'draft' || isDeleting}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                {row.status !== 'draft' && (
+                  <Tooltip title="Archive report">
+                    <span>
+                      <IconButton size="small" sx={{ color: 'grey.500' }} onClick={() => onArchive(row._id)}>
+                        <ArchiveIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </>
+            )}
+          </Stack>
+        );
+      },
     },
   ];
 
@@ -154,7 +199,7 @@ function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, on
           rowCount={totalDocs}
           pageSizeOptions={[limit]}
           paginationModel={{ page: page - 1, pageSize: limit }}
-          onPaginationModelChange={(model) => handlePageChange(model.page)}
+          onPaginationModelChange={(model) => onPageChange(model)}
           checkboxSelection
           disableRowSelectionOnClick
         />
@@ -173,6 +218,23 @@ function ReportsDataGrid({ reports = [], totalDocs = 0, page = 1, limit = 10, on
           <MuiButton onClick={() => setDeleteTarget(null)} color="inherit" size="small">Cancel</MuiButton>
           <MuiButton onClick={handleConfirmDelete} color="error" variant="contained" disabled={isDeleting} size="small">
             Delete
+          </MuiButton>
+        </DialogActions>
+      </MuiDialog>
+      <MuiDialog
+        open={Boolean(permanentDeleteTarget)}
+        onClose={() => setPermanentDeleteTarget(null)}
+      >
+        <DialogTitle>Permanently Delete Report</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This action permanently deletes the report and all associated audio files. This cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MuiButton onClick={() => setPermanentDeleteTarget(null)} color="inherit" size="small">Cancel</MuiButton>
+          <MuiButton onClick={handleConfirmPermanentDelete} color="error" variant="contained" size="small">
+            Permanently Delete
           </MuiButton>
         </DialogActions>
       </MuiDialog>

@@ -42,3 +42,46 @@ export function getTranscriptionInfo(report) {
     errorMessage: t.errorMessage || '',
   };
 }
+
+/**
+ * Send raw transcription to AI for review/correction.
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} transcription - Raw transcription text
+ * @returns {Promise<object>} Response with reviewedText and changes
+ */
+export async function reviewTranscriptionByAI(reportId, transcription) {
+  return apiClient(`/reports/${reportId}/transcriptions/review-by-ai`, {
+    method: 'POST',
+    body: { transcription },
+  });
+}
+
+/**
+ * Re-review transcription with user feedback for iterative improvement.
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} currentTranscription - Current transcription text
+ * @param {string} userFeedback - User feedback on what to improve
+ * @returns {Promise<object>} Response with reviewedText and changes
+ */
+export async function reReviewTranscription(reportId, currentTranscription, userFeedback) {
+  return apiClient(`/reports/${reportId}/transcriptions/re-review`, {
+    method: 'POST',
+    body: { currentTranscription, userFeedback },
+  });
+}
+
+/**
+ * Delete transcription from a report.
+ *
+ * Resets report status back to audio_recorded (or draft if no clips).
+ *
+ * @param {string} reportId - Report ID
+ * @returns {Promise<object>} Response with updated report info
+ */
+export async function deleteTranscription(reportId) {
+  return apiClient(`/reports/${reportId}/transcriptions`, {
+    method: 'DELETE',
+  });
+}

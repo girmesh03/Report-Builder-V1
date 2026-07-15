@@ -5,7 +5,13 @@
  */
 
 const constants = Object.freeze({
-  BODY_PARSER_LIMIT: '10kb',
+  BODY_PARSER_LIMIT: '1mb',
+
+  LANGUAGE_MODE_AMHARIC: 'am',
+
+  AUDIO_UPLOAD_PATH: '../../uploads/audio',
+
+  ARCHIVE_DURATION_DAYS: 30,
 
   PHONE_MAX_LENGTH: 15,
 
@@ -48,6 +54,7 @@ const constants = Object.freeze({
     GENERATED: 'generated',
     FINALIZED: 'finalized',
     EXPORTED: 'exported',
+    ARCHIVED: 'archived',
   }),
 
   TASK_STATUS: Object.freeze({

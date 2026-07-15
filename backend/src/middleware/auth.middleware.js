@@ -3,6 +3,8 @@
  *
  * @module middleware/auth
  */
+import asyncHandler from 'express-async-handler';
+import jwt from 'jsonwebtoken';
 import { verifyAccessToken } from '../services/token.service.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/apiError.js';
@@ -19,30 +21,34 @@ import httpStatus from '../utils/httpStatus.js';
  * @returns {Promise<void>}
  * @throws {ApiError} 401 if token is missing, invalid, or user not found
  */
-export const authenticate = async (req, _res, next) => {
-  try {
-    const token = req.cookies?.accessToken;
-    if (!token) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Authentication required');
-    }
-
-    const decoded = verifyAccessToken(token);
-    const user = await User.findById(decoded.userId).select('-passwordHash');
-
-    if (!user || !user.isActive) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'User not found or deactivated');
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      next(error);
-    } else {
-      next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid or expired token'));
-    }
+export const authenticate = asyncHandler(async (req, _res, next) => {
+  const token = req.cookies?.accessToken;
+  if (!token) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Authentication required', 'Authentication required. Please login.');
   }
-};
+
+  let decoded;
+  try {
+    decoded = verifyAccessToken(token);
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Session expired. Please login again.', 'Your session has expired. Please login again.');
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid session. Please login again.', 'Your session is invalid. Please login again.');
+    }
+    throw error;
+  }
+
+  const user = await User.findById(decoded.userId).select('-passwordHash');
+
+  if (!user || !user.isActive) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'User not found or deactivated');
+  }
+
+  req.user = user;
+  next();
+});
 
 /**
  * Authorize request based on user role.

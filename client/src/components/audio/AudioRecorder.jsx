@@ -1,54 +1,58 @@
 /**
  * Audio recorder component.
  *
- * Composes recording controls, meter, and playback
- * into a unified audio recording experience.
- * Guidelines are rendered by the parent page.
- *
- * Uses the useAudioRecorder hook for all MediaRecorder state.
- * Audio blob is stored in component-local refs per ADR-005.
+ * Manages multiple audio clips per session. Shows list of recorded clips
+ * with play/pause, discard for each. Provides "Record New" button when
+ * not currently recording. Submit sends all clips to the parent.
  *
  * @module components/audio/AudioRecorder
  */
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import useAudioRecorder from '../../hooks/useAudioRecorder.js';
 import AudioRecordingControls from './AudioRecordingControls.jsx';
 import AudioRecordingMeter from './AudioRecordingMeter.jsx';
-import AudioPlayback from './AudioPlayback.jsx';
-import { formatFileSize, isOverSizeLimit, isSilentRecording } from '../../utils/audioUtils.js';
+import MuiButton from '../reusable/MuiButton.jsx';
+import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { isSilentRecording } from '../../utils/audioUtils.js';
 
 /**
-  * @param {object} props
-  * @param {(data: { blob: Blob, duration: number, mimeType: string }) => void} [props.onSubmit] - Called when user clicks submit with valid audio
-  * @param {boolean} [props.disabled] - Disables submit button during upload
-  * @returns {JSX.Element}
-  */
+ * @param {object} props
+ * @param {(clips: Array<{ id: number|string, blob: Blob, duration: number, mimeType: string }>) => void} [props.onSubmit] - Called with all clips
+ * @param {boolean} [props.disabled] - Disables submit button during upload
+ * @returns {JSX.Element}
+ */
 function AudioRecorder({ onSubmit, disabled }) {
   const {
+    recordings,
     duration,
     error,
     mimeType,
-    audioBlob,
-    audioUrl,
-    fileSize,
-    isIdle,
     isRecording,
-    isRecorded,
+    isIdle,
     mediaStream,
     startRecording,
     stopRecording,
     discardRecording,
-    reRecord,
+    resetRecordings,
   } = useAudioRecorder();
 
-  const overLimit = isRecorded && isOverSizeLimit(fileSize);
-  const tooSmall = isRecorded && isSilentRecording(fileSize);
-  const canSubmit = isRecorded && !overLimit && !tooSmall && !disabled;
+  const hasRecordings = recordings.length > 0;
+  const allValid = recordings.every(
+    (r) => r.blob && r.blob.size > 0 && !isSilentRecording(r.blob.size)
+  );
 
   const handleSubmit = () => {
-    if (onSubmit && canSubmit) {
-      onSubmit({ blob: audioBlob, duration, mimeType });
+    if (onSubmit && hasRecordings && allValid && !disabled) {
+      const clips = recordings.map((r) => ({
+        id: r.id,
+        blob: r.blob,
+        duration: r.duration,
+        mimeType: r.mimeType,
+      }));
+      onSubmit(clips, resetRecordings);
     }
   };
 
@@ -63,36 +67,34 @@ function AudioRecorder({ onSubmit, disabled }) {
       {isRecording && <AudioRecordingMeter duration={duration} stream={mediaStream} />}
 
       <AudioRecordingControls
-        isIdle={isIdle}
+        isIdle={isIdle && (!isRecording)}
         isRecording={isRecording}
         onStart={startRecording}
         onStop={stopRecording}
+        recordings={recordings}
+        onDiscard={discardRecording}
       />
 
-      {isRecorded && audioUrl && (
-        <Box sx={{ mt: 2 }}>
-          <AudioPlayback
-            audioUrl={audioUrl}
-            duration={duration}
-            fileSize={fileSize}
-            canSubmit={canSubmit}
-            onSubmit={handleSubmit}
-            onDiscard={discardRecording}
-            onReRecord={reRecord}
-          />
-          {overLimit && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              File size ({formatFileSize(fileSize)}) exceeds the 10 MB limit. Please discard and
-              record a shorter clip.
-            </Alert>
-          )}
-          {tooSmall && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              Recording appears to be empty ({formatFileSize(fileSize)}). Please discard and
-              record again with clear speech.
-            </Alert>
-          )}
-        </Box>
+      {!isRecording && hasRecordings && (
+        <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', mt: 2, flexWrap: 'wrap' }}>
+          <MuiButton
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={startRecording}
+            aria-label="Record another clip"
+          >
+            Record New
+          </MuiButton>
+          <MuiButton
+            variant="contained"
+            startIcon={<CheckCircleIcon />}
+            onClick={handleSubmit}
+            disabled={!allValid || disabled}
+            aria-label="Submit all recordings"
+          >
+            Submit {recordings.length > 1 ? `${recordings.length} Clips` : 'Clip'}
+          </MuiButton>
+        </Stack>
       )}
     </Box>
   );

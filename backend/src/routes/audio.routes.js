@@ -4,7 +4,7 @@
  * @module routes/audio
  */
 import { Router } from 'express';
-import { uploadAudio } from '../controllers/audio.controller.js';
+import { uploadAudio, deleteClip } from '../controllers/audio.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import uploadAudioMiddleware from '../middleware/upload.middleware.js';
 import { uploadAudioRules } from '../validators/audio.validators.js';
@@ -20,6 +20,11 @@ router.post(
   uploadAudioRules,
   validate,
   uploadAudio,
+);
+
+router.delete(
+  '/:clipId',
+  deleteClip,
 );
 
 export default router;

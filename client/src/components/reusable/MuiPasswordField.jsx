@@ -37,6 +37,7 @@ const MuiPasswordField = forwardRef(({ size = 'small', slotProps, ...rest }, ref
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
+                type="button"
                 onClick={toggleShow}
                 onMouseDown={(e) => e.preventDefault()}
                 tabIndex={-1}

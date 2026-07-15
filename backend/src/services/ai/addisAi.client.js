@@ -14,6 +14,10 @@ const BASE_URL = env.ADDIS_AI_BASE_URL;
 const API_KEY = env.ADDIS_AI_API_KEY;
 const TIMEOUT_MS = env.ADDIS_AI_TIMEOUT_MS;
 
+if (!API_KEY || API_KEY === 'sk_replace_me') {
+  logger.warn('ADDIS_AI_API_KEY is missing or using placeholder "sk_replace_me". AI features will fail until a valid key is configured in the .env file.');
+}
+
 /**
  * Send a POST request to the Addis AI API.
  *

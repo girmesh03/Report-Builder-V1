@@ -20,7 +20,7 @@ import ReportsCardList from '../../components/reports/ReportsCardList.jsx';
 import ReportsDataGrid from '../../components/reports/ReportsDataGrid.jsx';
 import ReportMetadataDialog from '../../components/reports/ReportMetadataDialog.jsx';
 import ReportsFilterDialog from '../../components/reports/ReportsFilterDialog.jsx';
-import { fetchReports, createReport, updateReport, deleteReport } from '../../store/reportsSlice.js';
+import { fetchReports, createReport, updateReport, deleteReport, archiveReport, recoverReport, permanentDeleteReport } from '../../store/reportsSlice.js';
 import { fetchBranches } from '../../store/branchesSlice.js';
 import DescriptionIcon from '@mui/icons-material/Description';
 
@@ -36,6 +36,7 @@ function ReportsPage() {
   const { branches, loading: branchesLoading } = useSelector((state) => state.branches);
 
   const [viewMode, setViewMode] = useState('list');
+  const [showArchived, setShowArchived] = useState(false);
   const [filters, setFilters] = useState({ page: 1, limit: 10 });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -49,12 +50,15 @@ function ReportsPage() {
         cleanParams[key] = value;
       }
     });
+    if (showArchived) {
+      cleanParams.showArchived = 'true';
+    }
     dispatch(fetchReports(cleanParams));
-  }, [dispatch, filters]);
+  }, [dispatch, filters, showArchived]);
 
   useEffect(() => {
     loadReports();
-  }, [filters.page, filters.status, filters.branch, filters.dateFrom, filters.dateTo]);
+  }, [filters.page, filters.status, filters.branch, filters.dateFrom, filters.dateTo, showArchived]);
 
   useEffect(() => {
     if (branches.length === 0 && !branchesLoading) {
@@ -66,21 +70,32 @@ function ReportsPage() {
     setFilters((prev) => ({ ...prev, page: newPage }));
   }, []);
 
-  const handleDataGridPageChange = useCallback((newPage) => {
-    setFilters((prev) => ({ ...prev, page: newPage }));
+  const handleDataGridPageChange = useCallback((model) => {
+    setFilters((prev) => ({ ...prev, page: model.page + 1 }));
   }, []);
 
   const handleView = useCallback((id) => {
-    navigate(`/reports/${id}`);
+    navigate(`/reports/${id}/preview`);
   }, [navigate]);
 
   const handleEdit = useCallback((report) => {
-    setEditingReport(report);
-    setDialogOpen(true);
-  }, []);
+    navigate(`/reports/${report._id}/edit`);
+  }, [navigate]);
 
   const handleDelete = useCallback((id) => {
     dispatch(deleteReport(id));
+  }, [dispatch]);
+
+  const handleArchive = useCallback((id) => {
+    dispatch(archiveReport(id));
+  }, [dispatch]);
+
+  const handleRecover = useCallback((id) => {
+    dispatch(recoverReport(id));
+  }, [dispatch]);
+
+  const handlePermanentDelete = useCallback((id) => {
+    dispatch(permanentDeleteReport(id));
   }, [dispatch]);
 
   const handleCreateSubmit = useCallback(async (data) => {
@@ -106,7 +121,19 @@ function ReportsPage() {
   }, []);
 
   const handleFilterApply = useCallback((filterValues) => {
-    setFilters((prev) => ({ ...prev, ...filterValues, page: 1 }));
+    setFilters((prev) => {
+      const next = { ...prev, ...filterValues, page: 1 };
+      Object.keys(next).forEach((key) => {
+        if (next[key] === '' || next[key] === null || next[key] === undefined) {
+          delete next[key];
+        }
+      });
+      return next;
+    });
+  }, []);
+
+  const handleFilterClear = useCallback(() => {
+    setFilters({ page: 1, limit: 10 });
   }, []);
 
   const activeFilterCount = useMemo(() => {
@@ -120,7 +147,7 @@ function ReportsPage() {
 
   let content;
 
-  if (loading && reports.length === 0) {
+  if (loading) {
     content = <MuiLoadingState message="Loading reports..." />;
   } else if (error && reports.length === 0) {
     content = <MuiErrorState message={error} onRetry={() => loadReports()} />;
@@ -139,14 +166,17 @@ function ReportsPage() {
       <ReportsDataGrid
         reports={reports}
         totalDocs={totalDocs}
-        totalPages={totalPages}
         page={page}
         limit={10}
         onPageChange={handleDataGridPageChange}
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onArchive={handleArchive}
+        onRecover={handleRecover}
+        onPermanentDelete={handlePermanentDelete}
         isDeleting={deleteLoading}
+        showArchived={showArchived}
       />
     );
   } else {
@@ -155,8 +185,13 @@ function ReportsPage() {
         <ReportsCardList
           reports={reports}
           onView={handleView}
+          onEdit={handleEdit}
           onDelete={handleDelete}
+          onArchive={handleArchive}
+          onRecover={handleRecover}
+          onPermanentDelete={handlePermanentDelete}
           isDeleting={deleteLoading}
+          showArchived={showArchived}
         />
         {totalPages > 1 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
@@ -179,12 +214,15 @@ function ReportsPage() {
         onFilterClick={() => setFilterOpen(true)}
         activeFilterCount={activeFilterCount}
         onCreateClick={() => { setEditingReport(null); setDialogOpen(true); }}
+        showArchived={showArchived}
+        onShowArchivedChange={setShowArchived}
       />
       {content}
       <ReportsFilterDialog
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         onApply={handleFilterApply}
+        onClear={handleFilterClear}
         initialFilters={{
           status: filters.status || '',
           branch: filters.branch || '',

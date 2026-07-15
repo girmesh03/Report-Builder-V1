@@ -19,6 +19,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
+import ArchiveIcon from "@mui/icons-material/Archive";
 import MuiPageHeader from "../reusable/MuiPageHeader.jsx";
 
 /**
@@ -28,6 +29,8 @@ import MuiPageHeader from "../reusable/MuiPageHeader.jsx";
  * @param {function} onFilterClick
  * @param {number} props.activeFilterCount
  * @param {function} onCreateClick
+ * @param {boolean} [props.showArchived=false]
+ * @param {function} [onShowArchivedChange]
  * @returns {JSX.Element}
  */
 function ReportsToolbar({
@@ -36,6 +39,8 @@ function ReportsToolbar({
   onFilterClick,
   activeFilterCount = 0,
   onCreateClick,
+  showArchived = false,
+  onShowArchivedChange,
 }) {
   const handleViewModeChange = useCallback(
     (_e, newMode) => {
@@ -52,6 +57,17 @@ function ReportsToolbar({
       subtitle="Manage your branch visit reports"
       action={
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Tooltip title={showArchived ? "Show active reports" : "Show archived reports"}>
+            <span>
+              <IconButton
+                size="small"
+                onClick={() => onShowArchivedChange?.(!showArchived)}
+                sx={{ color: showArchived ? 'warning.main' : undefined }}
+              >
+                <ArchiveIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
           <Tooltip title="Filter">
             <span>
               <IconButton size="small" onClick={onFilterClick}>
@@ -78,10 +94,11 @@ function ReportsToolbar({
           </MuiButton>
           <IconButton
             size="small"
-            color="primary"
             onClick={onCreateClick}
+            aria-label="Create report"
             sx={{
               display: { xs: "inline-flex", sm: "none" },
+              color: 'primary.main',
             }}
           >
             <AddIcon />

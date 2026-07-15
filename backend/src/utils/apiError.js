@@ -12,13 +12,16 @@
 class ApiError extends Error {
   /**
    * @param {number} statusCode - HTTP status code
-   * @param {string} message - Error message
+   * @param {string} message - Error message (technical)
+   * @param {string} [userMessage=''] - User-friendly error message (falls back to technical)
    * @param {boolean} [isOperational=true] - Whether the error is operational
    * @param {string} [stack] - Optional stack trace
    */
-  constructor(statusCode, message, isOperational = true, stack = '') {
+  constructor(statusCode, message, userMessage = '', isOperational = true, stack = '') {
     super(message);
     this.statusCode = statusCode;
+    this.userMessage = userMessage || message;
+    this.technicalMessage = message;
     this.isOperational = isOperational;
     if (stack) {
       this.stack = stack;

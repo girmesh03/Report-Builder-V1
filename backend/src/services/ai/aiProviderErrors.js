@@ -10,9 +10,9 @@ import ApiError from '../../utils/apiError.js';
 import httpStatus from '../../utils/httpStatus.js';
 
 const ERROR_MAP = Object.freeze({
-  400: { status: httpStatus.BAD_REQUEST, message: 'Invalid request sent to the AI service.' },
-  401: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'AI service configuration error. Please contact support.' },
-  403: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'AI service configuration error. Please contact support.' },
+  400: { status: httpStatus.BAD_REQUEST, message: 'Something went wrong processing your request. Please try again.' },
+  401: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'The AI service is not configured correctly. Please contact your system administrator.' },
+  403: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'The AI service is not configured correctly. Please contact your system administrator.' },
   404: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'AI service endpoint not found. Please contact support.' },
   429: { status: httpStatus.TOO_MANY_REQUESTS, message: 'AI service is busy. Please try again later.' },
   500: { status: httpStatus.INTERNAL_SERVER_ERROR, message: 'AI service is temporarily unavailable. Please try again later.' },

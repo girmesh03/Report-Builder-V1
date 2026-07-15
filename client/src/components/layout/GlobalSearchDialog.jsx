@@ -120,7 +120,7 @@ function GlobalSearchDialog({ open, onClose }) {
         },
       }}
     >
-      <Stack sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Stack sx={{ flexDirection: 'column', height: '100%' }}>
         <Stack
           direction="row"
           spacing={1}

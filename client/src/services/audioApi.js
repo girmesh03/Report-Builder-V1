@@ -1,10 +1,13 @@
 /**
  * Audio upload API service.
  *
+ * All endpoints use apiClient which handles 401 → refresh → retry
+ * and session expiry. FormData body is detected automatically
+ * so Content-Type is omitted (browser sets multipart boundary).
+ *
  * @module services/audioApi
  */
 import apiClient from './apiClient.js';
-import { API_CONFIG } from '../utils/constants.js';
 
 /**
  * Upload recorded audio to a report.
@@ -28,23 +31,23 @@ export async function uploadAudio(reportId, audioBlob, metadata = {}) {
   formData.append('recordedAt', new Date().toISOString());
   formData.append('languageCode', 'am');
 
-  const res = await fetch(`${API_CONFIG.BASE_URL}/reports/${reportId}/audio`, {
+  return apiClient(`/reports/${reportId}/audio`, {
     method: 'POST',
-    credentials: 'include',
     body: formData,
   });
+}
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Upload failed' }));
-    const details = Array.isArray(err.data)
-      ? err.data.map((e) => `${e.field}: ${e.message}`).join('; ')
-      : Array.isArray(err.errors)
-        ? err.errors.map((e) => `${e.path || e.field}: ${e.msg || e.message}`).join('; ')
-        : '';
-    throw new Error(details || err.message || `Upload failed with status ${res.status}`);
-  }
-
-  return res.json();
+/**
+ * Delete a single audio clip from a report.
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} clipId - Clip ID to delete
+ * @returns {Promise<object>} Response with updated report info
+ */
+export async function deleteClip(reportId, clipId) {
+  return apiClient(`/reports/${reportId}/audio/${clipId}`, {
+    method: 'DELETE',
+  });
 }
 
 export default uploadAudio;

@@ -8,14 +8,17 @@
  *
  * @module components/reports/ReportMetadataDialog
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Chip from '@mui/material/Chip';
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormHelperText from '@mui/material/FormHelperText';
 import MuiDialog from '../reusable/MuiDialog.jsx';
 import MuiButton from '../reusable/MuiButton.jsx';
 import MuiTextField from '../reusable/MuiTextField.jsx';
@@ -39,6 +42,7 @@ function getBranchIds(report) {
  */
 function ReportMetadataDialog({ open, onClose, onSubmit, branches, isLoading, initialData = null }) {
   const isEditing = Boolean(initialData);
+  const [branchSelectOpen, setBranchSelectOpen] = useState(false);
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm({
     defaultValues: {
@@ -86,7 +90,7 @@ function ReportMetadataDialog({ open, onClose, onSubmit, branches, isLoading, in
                 name="reportDate"
                 control={control}
                 rules={{ required: 'Date is required' }}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <MuiDatePicker
                     label="Report Date"
                     value={field.value}
@@ -95,8 +99,8 @@ function ReportMetadataDialog({ open, onClose, onSubmit, branches, isLoading, in
                       textField: {
                         fullWidth: true,
                         size: 'small',
-                        error: !!errors.reportDate,
-                        helperText: errors.reportDate?.message,
+                        error: !!fieldState.error,
+                        helperText: fieldState.error?.message,
                       },
                     }}
                   />
@@ -107,32 +111,66 @@ function ReportMetadataDialog({ open, onClose, onSubmit, branches, isLoading, in
               <Controller
                 name="branches"
                 control={control}
-                render={({ field }) => (
-                  <MuiTextField
-                    select
-                    fullWidth
-                    label="Branches"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    slotProps={{
-                      select: {
-                        multiple: true,
-                        MenuProps: {
-                          slotProps: { paper: { sx: { maxHeight: 300 } } },
+                rules={{
+                  validate: (value) => (value && value.length > 0) || 'At least one branch is required',
+                }}
+                render={({ field, fieldState }) => (
+                  <>
+                    <MuiTextField
+                      select
+                      fullWidth
+                      label="Branches"
+                      value={field.value}
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        setBranchSelectOpen(false);
+                      }}
+                      error={!!fieldState.error}
+                      slotProps={{
+                        select: {
+                          multiple: true,
+                          open: branchSelectOpen,
+                          onOpen: () => setBranchSelectOpen(true),
+                          onClose: () => setBranchSelectOpen(false),
+                          renderValue: (selected) => (
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', overflowX: 'auto', maxWidth: '100%' }}>
+                              {selected.map((value) => {
+                                const branch = branches.find((b) => b._id === value);
+                                return (
+                                  <Chip
+                                    key={value}
+                                    label={branch?.name || value}
+                                    size="small"
+                                    onDelete={() => {
+                                      const next = field.value.filter((v) => v !== value);
+                                      field.onChange(next);
+                                    }}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                  />
+                                );
+                              })}
+                            </Box>
+                          ),
+                          MenuProps: {
+                            slotProps: { paper: { sx: { maxHeight: 300 } } },
+                          },
                         },
-                      },
-                    }}
-                  >
-                    {(!branches || branches.length === 0) ? (
-                      <MenuItem disabled value="">
-                        No branches available
-                      </MenuItem>
-                    ) : (branches || []).map((branch) => (
-                      <MenuItem key={branch._id} value={branch._id}>
-                        {branch.name}
-                      </MenuItem>
-                    ))}
-                  </MuiTextField>
+                      }}
+                    >
+                      {(!branches || branches.length === 0) ? (
+                        <MenuItem disabled value="">
+                          No branches available
+                        </MenuItem>
+                      ) : (branches || []).map((branch) => (
+                        <MenuItem key={branch._id} value={branch._id}>
+                          {branch.name}
+                        </MenuItem>
+                      ))}
+                    </MuiTextField>
+                    {fieldState.error && (
+                      <FormHelperText error>{fieldState.error.message}</FormHelperText>
+                    )}
+                  </>
                 )}
               />
             </Grid>

@@ -14,7 +14,8 @@ const STATUS_CONFIG = Object.freeze({
   transcription_reviewed: { label: 'Reviewed', color: 'warning' },
   generated: { label: 'Generated', color: 'primary' },
   finalized: { label: 'Finalized', color: 'success' },
-  exported: { label: 'Exported', color: 'success' },
+  exported: { label: 'Exported', color: 'info' },
+  archived: { label: 'Archived', color: 'warning' },
 });
 
 /**

@@ -14,6 +14,7 @@ import reportRoutes from './report.routes.js';
 import audioRoutes from './audio.routes.js';
 import transcriptionRoutes from './transcription.routes.js';
 import reportGenerationRoutes from './reportGeneration.routes.js';
+import reportPreviewRoutes from './reportPreview.routes.js';
 
 const router = Router();
 
@@ -25,5 +26,6 @@ router.use('/reports', reportRoutes);
 router.use('/reports/:reportId/audio', audioRoutes);
 router.use('/reports/:reportId/transcriptions', transcriptionRoutes);
 router.use('/reports/:reportId', reportGenerationRoutes);
+router.use('/reports/:reportId', reportPreviewRoutes);
 
 export default router;

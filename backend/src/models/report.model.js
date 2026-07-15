@@ -16,8 +16,16 @@ const audioClipSchema = new mongoose.Schema(
     duration: { type: Number, default: 0 },
     storagePath: { type: String, default: '' },
   },
-  { _id: false }
+  {
+    _id: true,
+    toJSON: { virtuals: true },
+  }
 );
+
+audioClipSchema.virtual('url').get(function () {
+  if (!this.filename) return '';
+  return `/uploads/audio/${this.filename}`;
+});
 
 const transcriptionSchema = new mongoose.Schema(
   {
@@ -88,7 +96,7 @@ const reportSchema = new mongoose.Schema(
     },
     languageMode: {
       type: String,
-      default: 'am',
+      default: constants.LANGUAGE_MODE_AMHARIC || 'am',
     },
     supervisorName: {
       type: String,
@@ -124,7 +132,16 @@ const reportSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    editedAt: {
+      type: Date,
+      default: null,
+    },
     exportHistory: [exportEntrySchema],
+    archivedAt: { type: Date, default: null },
+    archiveAt: { type: Date, default: null },
+    previousStatus: { type: String, default: '' },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -134,6 +151,7 @@ const reportSchema = new mongoose.Schema(
 reportSchema.index({ user: 1, reportDate: -1 });
 reportSchema.index({ user: 1, status: 1 });
 reportSchema.index({ branches: 1 });
+reportSchema.index({ archiveAt: 1 });
 
 reportSchema.plugin(mongoosePaginate);
 

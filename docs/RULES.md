@@ -384,5 +384,22 @@
 
 ---
 
-*Last updated: 2026-07-11*
-*Extracted from: ARCHITECTURE.md, PACKAGE_DECISIONS.md, DEVELOPMENT_PHASES.md, PRD.md, PROJECT_OVERVIEW.md, PROBLEM_STATEMENT.md, INITIAL_PROMPT, ADR-001 through ADR-006, ADR README, PHASE-1-SUMMARY through PHASE-12-SUMMARY, PHASE-1-4-VALIDATION, PHASE-1-6-VALIDATION, RESEARCH/addis-ai.md, RESEARCH/addis-ai-concrete-understanding.md, all 16 phase prompt files, phase 11 audit.*
+*Last updated: 2026-07-15*
+## 30. Phase 13 Report Preview, Edit & Finalization Rules
+
+- [ ] **30.1** Two new routes added: `/reports/:id/edit` (EditReportPage) for full editing at any status, `/reports/:id/preview` (ReportPreviewPage) for read-only viewing with finalize bar. CreateReportPage stays at `/reports/:id`. [CLIENT:main.jsx, EditReportPage.jsx, ReportPreviewPage.jsx]
+- [ ] **30.2** Reports list navigation: `handleView` → `/reports/:id/preview`, `handleEdit` → `/reports/:id/edit`. [CLIENT:ReportsPage.jsx]
+- [ ] **30.3** Audio upload (`attachAudioToReport`) accepts statuses: `draft`, `audio_recorded`, `transcribed`, `transcription_reviewed`, `generated`, `finalized`. Re-attaching audio resets transcription, reviewedTranscription, and generatedReport when transcription existed. [BACKEND:audio.service.js]
+- [ ] **30.4** Audio clip delete (`deleteAudioClip`) cascades: resets transcription, reviewedTranscription, and generatedReport; rolls status to `audio_recorded` (or `draft` if no clips remain). [BACKEND:audio.service.js]
+- [ ] **30.5** Transcription request (STT) accepts statuses: `audio_recorded`, `transcribed`, `transcription_reviewed`, `generated`, `finalized`. [BACKEND:addisAiStt.service.js]
+- [ ] **30.6** Save reviewed transcription accepts statuses: `transcribed`, `transcription_reviewed`, `generated`, `finalized`. When saving at `GENERATED`/`FINALIZED`, clears `generatedReport` to `{ status: PENDING }`. [BACKEND:reportGeneration.controller.js]
+- [ ] **30.7** Report generation accepts statuses: `transcription_reviewed`, `generated`, `finalized`. [BACKEND:reportGeneration.controller.js]
+- [ ] **30.8** GenerateReportPanel resets local state when `existingText` becomes empty (after deletion clears report). Shows "Regenerate" button when report is already generated. [CLIENT:GenerateReportPanel.jsx]
+- [ ] **30.9** TranscriptionReviewEditor button layout: AI review actions in one row (`direction={{ xs: 'column', sm: 'row' }}`), Save button in separate full-width row. "Re-review with Feedback" always visible. [CLIENT:TranscriptionReviewEditor.jsx]
+- [ ] **30.10** Reviewed transcription card shows both "Edit" (opens TranscriptionReviewEditor) and "Delete" buttons. EditReportPage and CreateReportPage both feature these buttons. [CLIENT:EditReportPage.jsx, CreateReportPage.jsx]
+- [ ] **30.11** EditReportPage provides full editing for all statuses including finalized: date/branch/note via ReportMetadataDialog, audio upload/delete, transcription, transcription review editor with Edit/Delete, generation with Regenerate. [CLIENT:EditReportPage.jsx]
+- [ ] **30.12** ReportPreviewPage is read-only: no ReportEditor, shows audio playback list + reviewed transcription + generated report sections. Finalize bar shown for generated reports. [CLIENT:ReportPreviewPage.jsx]
+- [ ] **30.13** `hasAudio` check in edit/create pages is based solely on `report.audioClips?.length > 0` — not on status. [CLIENT:EditReportPage.jsx, CreateReportPage.jsx]
+- [ ] **30.14** `generateReport` commits transaction BEFORE the AI call (30-60s+) to avoid holding a long transaction. If the AI call fails, the reviewed transcription is preserved from the prior commit. [BACKEND:reportGeneration.controller.js]
+
+*Extracted from: ARCHITECTURE.md, PACKAGE_DECISIONS.md, DEVELOPMENT_PHASES.md, PRD.md, PROJECT_OVERVIEW.md, PROBLEM_STATEMENT.md, INITIAL_PROMPT, ADR-001 through ADR-006, ADR README, PHASE-1-SUMMARY through PHASE-13-SUMMARY, PHASE-1-4-VALIDATION, PHASE-1-6-VALIDATION, RESEARCH/addis-ai.md, RESEARCH/addis-ai-concrete-understanding.md, all 16 phase prompt files, phase 11 audit.**

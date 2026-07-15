@@ -3,6 +3,7 @@
  *
  * Redirects unauthenticated users to the login page.
  * Shows a loading spinner while auth state is being initialised.
+ * Auth hydration (fetchCurrentUser) is dispatched by App.jsx on mount.
  *
  * @module routes/ProtectedRoute
  */

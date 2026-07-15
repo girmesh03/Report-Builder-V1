@@ -1,9 +1,10 @@
 /**
  * Addis AI Speech-to-Text service.
  *
- * Transcribes uploaded audio clips using Addis AI STT.
- * Supports transparent chunking for long recordings and
- * re-transcription for testing accuracy.
+ * Transcribes all audio clips for a report using Addis AI STT.
+ * Each clip is individually chunked and transcribed; results are
+ * accumulated into a single transcription text with overlap-aware
+ * deduplication.
  *
  * @module services/ai/addisAiStt
  */
@@ -15,6 +16,9 @@ import logger from '../../utils/logger.js';
 import { post } from './addisAi.client.js';
 import { chunkAudio } from './audioChunker.js';
 import env from '../../config/env.js';
+
+/** @type {number} Overlap in seconds between adjacent STT chunks for context preservation */
+const STT_OVERLAP_SECONDS = 2;
 
 /**
  * Build a Blob with the correct MIME type for a chunk buffer.
@@ -35,22 +39,65 @@ function chunkBlob(buffer, fallbackMime) {
 }
 
 /**
- * Transcribe the latest (or specified) audio clip for a report.
+ * Merge two adjacent chunk transcriptions by removing overlapped text.
  *
- * First-time transcription requires status `audio_recorded`.
- * Re-transcription is allowed when status is `transcribed` or
- * when a previous transcription attempt failed (status remains
- * `audio_recorded` with `transcription.status === 'failed'`).
+ * Detects the overlapping region between the end of the previous chunk
+ * and the start of the next chunk using character-level and word-level
+ * suffix/prefix matching. This prevents duplicate words at chunk boundaries.
+ *
+ * @param {string} prevText - Full transcription of the prior chunk(s)
+ * @param {string} nextText - Full transcription of the current chunk
+ * @param {number} overlapSeconds - Duration of overlap in seconds
+ * @returns {string} nextText with overlapping prefix removed (or full text if no match)
+ */
+function mergeOverlappingTexts(prevText, nextText, overlapSeconds) {
+  if (!overlapSeconds || !prevText || !nextText) return nextText;
+
+  const maxOverlapChars = overlapSeconds * 15;
+
+  const searchLen = Math.min(
+    maxOverlapChars * 2,
+    prevText.length,
+    nextText.length
+  );
+
+  for (let len = searchLen; len >= 3; len--) {
+    const suffix = prevText.slice(-len);
+    if (nextText.startsWith(suffix)) {
+      return nextText.slice(len);
+    }
+  }
+
+  const prevWords = prevText.split(/\s+/);
+  const nextWords = nextText.split(/\s+/);
+  const maxWords = Math.min(Math.ceil(overlapSeconds * 4), prevWords.length, nextWords.length);
+
+  for (let i = maxWords; i >= 1; i--) {
+    const prevSuffix = prevWords.slice(-i).join(' ');
+    const nextPrefix = nextWords.slice(0, i).join(' ');
+    if (prevSuffix === nextPrefix) {
+      return nextWords.slice(i).join(' ');
+    }
+  }
+
+  return nextText;
+}
+
+/**
+ * Transcribe all audio clips for a report.
+ *
+ * Iterates every clip in the report's audioClips array. Each clip is
+ * chunked and transcribed separately; all transcription text is combined
+ * with overlap-aware deduplication into a single `transcription.text` field.
  *
  * @param {object} params
  * @param {string} params.reportId - Report ID
  * @param {string} params.userId - Owning user ID
- * @param {string} [params.clipId] - Optional specific clip ID to transcribe
- * @returns {Promise<object>} Transcription result with metadata
+ * @returns {Promise<object>} Combined transcription result with metadata
  * @throws {ApiError} 404 if report not found or not owned
  * @throws {ApiError} 400 if report has no audio or invalid status
  */
-export async function transcribeAudio({ reportId, userId, clipId }) {
+export async function transcribeAudio({ reportId, userId }) {
   const report = await Report.findOne({ _id: reportId, user: userId });
   if (!report) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Report not found');
@@ -58,7 +105,10 @@ export async function transcribeAudio({ reportId, userId, clipId }) {
 
   const canTranscribe =
     report.status === constants.REPORT_STATUS.AUDIO_RECORDED ||
-    report.status === constants.REPORT_STATUS.TRANSCRIBED;
+    report.status === constants.REPORT_STATUS.TRANSCRIBED ||
+    report.status === constants.REPORT_STATUS.TRANSCRIPTION_REVIEWED ||
+    report.status === constants.REPORT_STATUS.GENERATED ||
+    report.status === constants.REPORT_STATUS.FINALIZED;
 
   if (!canTranscribe) {
     throw new ApiError(
@@ -71,91 +121,138 @@ export async function transcribeAudio({ reportId, userId, clipId }) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Report has no audio clips to transcribe.');
   }
 
-  let clip;
-  if (clipId) {
-    clip = report.audioClips.id(clipId);
-    if (!clip) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Audio clip not found.');
-    }
-  } else {
-    clip = report.audioClips[report.audioClips.length - 1];
-  }
-
-  if (!clip.storagePath) {
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Audio file path is missing.');
-  }
-
   const languageCode = env.ADDIS_AI_STT_LANGUAGE_CODE || 'am';
-
-  let chunks;
-  try {
-    chunks = await chunkAudio(clip.storagePath);
-  } catch (err) {
-    logger.error('Audio chunking failed', {
-      storagePath: clip.storagePath,
-      error: err.message,
-    });
-    throw new ApiError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      'Audio could not be processed for transcription. Ensure ffmpeg is installed or use a shorter recording.'
-    );
-  }
 
   let transcriptionText = '';
   let totalConfidence = 0;
-  let chunkCount = 0;
+  let totalChunks = 0;
   let requestId = '';
   let totalBilledDuration = 0;
+  const clipResults = [];
 
-  for (const chunk of chunks) {
-    const formData = new FormData();
-    const requestData = JSON.stringify({ language_code: languageCode });
-    const blob = chunkBlob(chunk.buffer, clip.mimeType);
-    formData.append('audio', blob, clip.filename || 'audio');
-    formData.append('request_data', requestData);
+  for (const clip of report.audioClips) {
+    if (!clip.storagePath) {
+      logger.warn('Skipping clip with missing storagePath', { clipId: clip._id });
+      continue;
+    }
 
-    let providerResponse;
+    let chunks;
     try {
-      providerResponse = await post('/api/v2/stt', formData);
+      chunks = await chunkAudio(clip.storagePath, undefined, STT_OVERLAP_SECONDS);
     } catch (err) {
+      logger.error('Audio chunking failed for clip', {
+        reportId,
+        clipId: clip._id,
+        error: err.message,
+      });
       report.transcription = {
         text: transcriptionText,
-        confidence: chunkCount > 0 ? totalConfidence / chunkCount : 0,
+        confidence: totalChunks > 0 ? totalConfidence / totalChunks : 0,
         languageCode,
         requestId: requestId || '',
         billedDuration: totalBilledDuration,
         status: constants.TASK_STATUS.FAILED,
-        errorMessage: `Chunk ${chunk.index + 1}/${chunks.length} failed: ${err.message}`,
+        errorMessage: `Clip ${clip._id} chunking failed: ${err.message}`,
       };
       await report.save();
-      throw err;
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        `Audio clip could not be processed for transcription. Ensure ffmpeg is installed or use a shorter recording.`
+      );
     }
 
-    const chunkText = providerResponse?.data?.transcription || '';
-    const chunkRequestId = providerResponse?.data?.usage_metadata?.requestId || '';
-    const chunkBilledStr = providerResponse?.data?.usage_metadata?.totalBilledDuration || '0s';
-    const chunkBilled = parseFloat(chunkBilledStr) || 0;
-    const chunkConfidence = typeof providerResponse?.confidence === 'number' ? providerResponse.confidence : 0;
+    let clipText = '';
+    let clipChunks = 0;
+    let clipConfidence = 0;
+    const clipChunkTexts = [];
+
+    for (const chunk of chunks) {
+      const formData = new FormData();
+      const requestData = {
+        language_code: languageCode,
+      };
+      if (env.ADDIS_AI_STT_MODEL) {
+        requestData.model = env.ADDIS_AI_STT_MODEL;
+      }
+      requestData.temperature = 0.0;
+
+      const blob = chunkBlob(chunk.buffer, clip.mimeType);
+      formData.append('audio', blob, clip.filename || 'audio');
+      formData.append('request_data', JSON.stringify(requestData));
+
+      let providerResponse;
+      try {
+        providerResponse = await post('/api/v2/stt', formData);
+      } catch (err) {
+        report.transcription = {
+          text: transcriptionText + (clipText ? ' ' + clipText : ''),
+          confidence: totalChunks > 0 ? totalConfidence / totalChunks : 0,
+          languageCode,
+          requestId: requestId || '',
+          billedDuration: totalBilledDuration,
+          status: constants.TASK_STATUS.FAILED,
+          errorMessage: `Clip chunk ${chunk.index + 1}/${chunks.length} failed: ${err.message}`,
+        };
+        await report.save();
+        throw err;
+      }
+
+      const chunkText = providerResponse?.data?.transcription || '';
+      const chunkRequestId = providerResponse?.data?.usage_metadata?.requestId || '';
+      const chunkBilledStr = providerResponse?.data?.usage_metadata?.totalBilledDuration || '0s';
+      const chunkBilled = parseFloat(chunkBilledStr) || 0;
+      const chunkConfidence = typeof providerResponse?.confidence === 'number' ? providerResponse.confidence : 0;
+
+      clipChunkTexts.push(chunkText);
+      clipConfidence += chunkConfidence;
+      clipChunks++;
+      requestId = chunkRequestId || requestId;
+      totalBilledDuration += chunkBilled;
+
+      logger.info('STT chunk transcribed', {
+        reportId,
+        clipId: clip._id,
+        chunk: chunk.index + 1,
+        total: chunks.length,
+        requestId: chunkRequestId,
+        billedDuration: chunkBilled,
+      });
+    }
+
+    for (let i = 0; i < clipChunkTexts.length; i++) {
+      if (i === 0) {
+        clipText = clipChunkTexts[i];
+      } else {
+        const merged = mergeOverlappingTexts(clipChunkTexts[i - 1], clipChunkTexts[i], STT_OVERLAP_SECONDS);
+        if (clipText) {
+          clipText += ' ';
+        }
+        clipText += merged;
+      }
+    }
 
     if (transcriptionText) {
       transcriptionText += ' ';
     }
-    transcriptionText += chunkText;
-    totalConfidence += chunkConfidence;
-    chunkCount++;
-    requestId = chunkRequestId || requestId;
-    totalBilledDuration += chunkBilled;
+    transcriptionText += clipText;
+    totalConfidence += clipConfidence;
+    totalChunks += clipChunks;
 
-    logger.info('STT chunk transcribed', {
+    clipResults.push({
+      clipId: clip._id,
+      text: clipText,
+      chunkCount: clipChunks,
+    });
+
+    logger.info('Clip transcribed', {
       reportId,
-      chunk: chunk.index + 1,
-      total: chunks.length,
-      requestId: chunkRequestId,
-      billedDuration: chunkBilled,
+      clipId: clip._id,
+      clipTextLength: clipText.length,
+      chunks: clipChunks,
     });
   }
 
-  const confidence = chunkCount > 0 ? totalConfidence / chunkCount : 0;
+  const confidence = totalChunks > 0 ? totalConfidence / totalChunks : 0;
 
   report.transcription = {
     text: transcriptionText,
@@ -174,7 +271,8 @@ export async function transcribeAudio({ reportId, userId, clipId }) {
     requestId,
     billedDuration: totalBilledDuration,
     confidence,
-    chunkCount,
+    totalChunks,
+    clipCount: report.audioClips.length,
     status: 'completed',
   });
 
@@ -189,5 +287,6 @@ export async function transcribeAudio({ reportId, userId, clipId }) {
       billedDuration: totalBilledDuration,
       status: constants.TASK_STATUS.COMPLETED,
     },
+    clips: clipResults,
   };
 }

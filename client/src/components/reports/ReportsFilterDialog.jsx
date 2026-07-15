@@ -4,6 +4,7 @@
  * Dialog with status, branch, dateFrom, dateTo fields in a Grid layout.
  * Each field has a clear icon adornment. Apply and Clear buttons.
  * Clear resets fields to defaults, applies empty filters, and closes.
+ * Apply sets the active filters and closes.
  *
  * @module components/reports/ReportsFilterDialog
  */
@@ -37,6 +38,7 @@ const REPORT_STATUSES = [
  * @param {boolean} props.open
  * @param {function} props.onClose
  * @param {function} props.onApply
+ * @param {function} props.onClear
  * @param {object} props.initialFilters
  * @param {Array<object>} props.branches
  * @returns {JSX.Element}
@@ -45,6 +47,7 @@ function ReportsFilterDialog({
   open,
   onClose,
   onApply,
+  onClear,
   initialFilters = {},
   branches = [],
 }) {
@@ -73,12 +76,12 @@ function ReportsFilterDialog({
   }, [open, resetFromInitial]);
 
   const handleApply = useCallback(() => {
-    const filters = {};
-    if (status) filters.status = status;
-    if (branch) filters.branch = branch;
-    if (dateFrom) filters.dateFrom = dateFrom.format("YYYY-MM-DD");
-    if (dateTo) filters.dateTo = dateTo.format("YYYY-MM-DD");
-    onApply(filters);
+    onApply({
+      status: status || '',
+      branch: branch || '',
+      dateFrom: dateFrom ? dateFrom.format("YYYY-MM-DD") : '',
+      dateTo: dateTo ? dateTo.format("YYYY-MM-DD") : '',
+    });
     onClose();
   }, [status, branch, dateFrom, dateTo, onApply, onClose]);
 
@@ -87,9 +90,9 @@ function ReportsFilterDialog({
     setBranch("");
     setDateFrom(null);
     setDateTo(null);
-    onApply({ status: "", branch: "", dateFrom: "", dateTo: "" });
+    onClear();
     onClose();
-  }, [onApply, onClose]);
+  }, [onClear, onClose]);
 
   return (
     <MuiDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -109,6 +112,7 @@ function ReportsFilterDialog({
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
+                            type="button"
                             size="small"
                             onClick={() => setStatus("")}
                             edge="end"
@@ -149,6 +153,7 @@ function ReportsFilterDialog({
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
+                            type="button"
                             size="small"
                             onClick={() => setBranch("")}
                             edge="end"
@@ -193,6 +198,7 @@ function ReportsFilterDialog({
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
+                                type="button"
                                 size="small"
                                 onClick={() => setDateFrom(null)}
                                 edge="end"
@@ -223,6 +229,7 @@ function ReportsFilterDialog({
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
+                                type="button"
                                 size="small"
                                 onClick={() => setDateTo(null)}
                                 edge="end"

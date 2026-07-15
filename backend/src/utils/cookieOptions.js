@@ -1,6 +1,9 @@
 /**
  * httpOnly cookie configuration for JWT tokens.
  *
+ * maxAge values should match env.JWT_ACCESS_EXPIRES_IN (default 15m)
+ * and env.JWT_REFRESH_EXPIRES_IN (default 7d) respectively.
+ *
  * @module utils/cookieOptions
  */
 import env from '../config/env.js';
@@ -18,7 +21,7 @@ export const accessTokenCookieOptions = Object.freeze({
   secure: env.COOKIE_SECURE,
   sameSite: env.COOKIE_SAME_SITE,
   path: '/api/v1',
-  maxAge: 15 * ONE_MINUTE,
+  maxAge: 15 * ONE_MINUTE,          // sync with env.JWT_ACCESS_EXPIRES_IN
 });
 
 /**
@@ -31,5 +34,5 @@ export const refreshTokenCookieOptions = Object.freeze({
   secure: env.COOKIE_SECURE,
   sameSite: env.COOKIE_SAME_SITE,
   path: '/api/v1/auth',
-  maxAge: 7 * ONE_DAY,
+  maxAge: 7 * ONE_DAY,              // sync with env.JWT_REFRESH_EXPIRES_IN
 });

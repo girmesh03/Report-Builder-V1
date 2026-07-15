@@ -4,10 +4,11 @@
  * @module store/store
  */
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './authSlice.js';
+import authReducer, { logout } from './authSlice.js';
 import profileReducer from './profileSlice.js';
 import reportsReducer from './reportsSlice.js';
 import branchesReducer from './branchesSlice.js';
+import { setOnSessionExpired } from '../services/apiClient.js';
 
 export const store = configureStore({
   reducer: {
@@ -17,3 +18,5 @@ export const store = configureStore({
     branches: branchesReducer,
   },
 });
+
+setOnSessionExpired(() => store.dispatch(logout()));

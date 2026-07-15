@@ -2,13 +2,14 @@
  * Root App component.
  *
  * Renders theme, CssBaseline, error boundary, toast container,
- * dispatches fetchCurrentUser on mount, and renders child routes.
+ * dispatches fetchCurrentUser on mount to hydrate auth state,
+ * and renders child routes.
  *
  * @module App
  */
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { Outlet } from 'react-router';
+import { useDispatch } from 'react-redux';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppThemeProvider from './providers/AppThemeProvider.jsx';
 import AppErrorBoundary from './components/feedback/AppErrorBoundary.jsx';

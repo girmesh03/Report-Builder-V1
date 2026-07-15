@@ -32,7 +32,8 @@ backend/
       **report.controller.js   Report CRUD with pagination and user ownership (plus monthly report compilation, date-range export)**
       **audio.controller.js    Audio upload and metadata persistence**
       **transcription.controller.js   STT transcription request**
-      **reportGeneration.controller.js   Reviewed transcription save and AI report generation**
+      **reportGeneration.controller.js   Reviewed transcription save (accepts transcribed, transcription_reviewed, generated, finalized) and AI report generation (accepts transcription_reviewed, generated, finalized). Clears generatedReport when re-saving review at GENERATED/FINALIZED status.**
+      **reportPreview.controller.js      Report preview retrieval, edited report save, and finalization**
     middleware/
       **security.middleware.js      Helmet, cors, compression, cookie-parser,
                                   mongo-sanitize, rate-limit**
@@ -53,9 +54,10 @@ backend/
       **profile.routes.js Profile route definitions**
       **branch.routes.js  Branch route definitions (all authenticated)**
       **report.routes.js  Report route definitions (all authenticated, ownership enforced) — list, get, create, update, delete, monthly, export**
-      **audio.routes.js   Audio upload route (POST /reports/:reportId/audio)**
-      **transcription.routes.js   Transcription route (POST /reports/:reportId/transcriptions)**
-      **reportGeneration.routes.js   Report generation routes (PATCH /reports/:reportId/transcriptions/review, POST /reports/:reportId/generate)**
+      **audio.routes.js   Audio upload route (POST /reports/:reportId/audio) — accepts draft, audio_recorded, transcribed, transcription_reviewed, generated, finalized. DELETE /reports/:reportId/audio/:clipId — cascades reset of transcription/reviewedTranscription/generatedReport.**
+      **transcription.routes.js   Transcription route (POST /reports/:reportId/transcriptions) — accepts audio_recorded, transcribed, transcription_reviewed, generated, finalized.**
+      **reportGeneration.routes.js   Report generation routes (PATCH /reports/:reportId/transcriptions/review, POST /reports/:reportId/generate) — review accepts transcribed, transcription_reviewed, generated, finalized; generate accepts transcription_reviewed, generated, finalized.**
+      **reportPreview.routes.js      Report preview routes (GET /reports/:reportId/preview, PATCH /reports/:reportId/generated-report, POST /reports/:reportId/finalize)**
     services/
       **auth.service.js   Auth business logic (register, login, refresh)**
       **token.service.js  JWT access and refresh token generation/verification**
@@ -89,6 +91,7 @@ backend/
       **audio.validators.js   express-validator rules for audio upload metadata**
       **transcription.validators.js   express-validator rules for transcription request**
       **reportGeneration.validators.js   express-validator rules for reviewed transcription save**
+      **reportPreview.validators.js      express-validator rules for edited report save**
   config/
     **seedBranches.js       Auto-seeds 14 predefined Amharic branches on first startup**
   mock/
@@ -100,6 +103,7 @@ backend/
 **Key patterns:**
 - `express-async-handler` wraps all controllers and forwards errors to the global handler.
 - All write controllers use try/catch/finally with MongoDB sessions/transactions. Every write endpoint follows `mongoose.startSession()` → `session.startTransaction()` → write → `session.commitTransaction()` / `session.abortTransaction()` → `session.endSession()` in `finally`.
+- **Exception:** `generateReport` commits the transaction BEFORE the long-running AI call (30-60s+) to avoid holding a transaction open during external I/O. The reviewed transcription is already persisted at that point.
 - `mongoose-paginate-v2` for pagination on Branch and Report list endpoints.
 - Centralized constants in `src/utils/constants.js` — no magic values elsewhere. Includes `BODY_PARSER_LIMIT`, `PHONE_MAX_LENGTH`, `ROLES`, `AUTH` (name/password limits), `AUTH_RATE_LIMIT`, `GENERAL_RATE_LIMIT`, `PAGINATION`, `REPORT_STATUS`, `TASK_STATUS`, `BRANCH`, and general config.
 - All config values accessed via the frozen `env` config object.
@@ -149,12 +153,12 @@ client/
       auth/           **Login, register, OAuth callback**
       dashboard/      **Dashboard landing page (summary cards + recent activity)**
       profile/        **Profile view and edit page (personal info + change password)**
-      reports/        **ReportsPage** (list/grid toggle, search, filters, pagination, create dialog) and **CreateReportPage** (metadata toggle, audio recording via AudioRecorder)
+      reports/        **ReportsPage** (list/grid toggle, search, filters, pagination, create dialog), **CreateReportPage** (metadata toggle, audio recording via AudioRecorder, transcription panel, review editor, generate panel), **EditReportPage** (full edit page for all statuses at /reports/:id/edit, includes date/branch/note editing, audio upload/delete, transcription, review, generation), **ReportPreviewPage** (read-only preview with audio clips, reviewed transcription, and finalization at /reports/:id/preview)
       errors/         **404 page**
     hooks/            **useAudioRecorder** (MediaRecorder hook with idle/recording/recorded state machine)
     providers/        **AppThemeProvider** (wraps AppTheme for provider-layer separation)
     routes/           **Route guards (ProtectedRoute, PublicRoute)**
-    services/         **API client, auth API, profile API, reportsApi, branchesApi, audioApi**
+    services/         **API client, auth API, profile API, reportsApi, branchesApi, audioApi, transcriptionApi, reportGenerationApi, reportPreviewApi**
     store/            **Redux store (auth slice, profile slice, reportsSlice, branchesSlice)**
     theme/            **MUI theme config (AppTheme, themePrimitives, customizations/)**
     utils/            **Constants, route paths**
@@ -185,7 +189,9 @@ client/
 - ReportsFilterDialog provides status select, branch select, date from/to (MuiDatePicker). Clear resets to empty defaults, applies, and closes.
 - reportMetadataDialog, branchesApi, reportsApi use apiClient with query string building for pagination/search params.
 - reportsSlice and branchesSlice manage report/branch state with createAsyncThunk, per-action loading/error states.
-- CreateReportPage displays report metadata summary (collapsible toggle) and provides audio recording via AudioRecorder. At `/reports/:id` route. After audio upload, shows transcription panel (request, re-transcribe), transcription review editor (edit raw transcription, save reviewed), and generate report panel (trigger AI generation, show preview). Status progression: draft → audio_recorded → transcribed → transcription_reviewed → generated → finalized → exported.
+- CreateReportPage displays report metadata summary (collapsible toggle) and provides audio recording via AudioRecorder. At `/reports/:id` route. After audio upload, shows transcription panel (request, re-transcribe), transcription review editor (edit raw transcription, save reviewed with Edit/Delete buttons), and generate report panel (trigger AI generation, regenerate existing). Has "View Report" button for generated/finalized/exported reports. Status progression: draft → audio_recorded → transcribed → transcription_reviewed → generated → finalized → exported.
+- EditReportPage at `/reports/:id/edit` provides full editing for all statuses including finalized: date/branch/note via ReportMetadataDialog, audio recording/upload/delete, transcription, transcription review editor with Edit/Delete, report generation with Regenerate. Always editable regardless of status.
+- ReportPreviewPage provides read-only report preview (structured display with audio clip list, reviewed transcription, generated report sections) and finalization. At `/reports/:id/preview` route. Accessible from reports list/grid via View action.
 - AudioRecorder uses useAudioRecorder hook (MediaRecorder API) with record, stop, playback, discard, re-record. No fixed duration limit. 10 MB file size enforced at submit time.
 - AppSidebar responsive: permanent Drawer on `md+` (collapsible via MenuIcon), temporary Drawer on mobile (centered app name). Navigation items (Dashboard, Reports, Profile) at top with `justifyContent: 'space-between'`; Logout at bottom separated by Divider.
 - AppTopbar shows current page title (dynamic from route), search icon (opens GlobalSearchDialog), theme toggle (light/dark via `useColorScheme`), and user avatar dropdown with profile link and logout.
@@ -208,7 +214,7 @@ Over phases, these Mongoose models will be built:
 
 - **User** — name, email, passwordHash, role, avatarUrl, phone, isActive, lastLoginAt, timestamps. ✅ Implemented
 - **Branch** — name (enum from BRANCH_NAMES constant), code, branch, address, managerName, managerPhone, isActive, timestamps. Indexes: `{ code: 1 }` unique, `{ name: 1 }`. ✅ Implemented
-- **Report** — user, reportDate, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[] (filename, mimeType, size, duration, storagePath), transcription (text, confidence, languageCode, requestId, billedDuration, status), reviewedTranscription, reviewedAt, reviewerUserId, generatedReport (text, modelVersion, promptVersion, finishReason, inputTokens, outputTokens, status), editedReport, exportHistory[] (format, exportedAt, filename), timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`. Monthly compilation at `GET /api/v1/reports/monthly?year=&month=` and date-range export at `GET /api/v1/reports/export?dateFrom=&dateTo=`. ✅ Implemented
+- **Report** — user, reportDate, branches[], status (draft→audio_recorded→transcribed→transcription_reviewed→generated→finalized→exported), languageMode, supervisorName, notes, audioClips[] (filename, mimeType, size, duration, storagePath), transcription (text, confidence, languageCode, requestId, billedDuration, status), reviewedTranscription, reviewedAt, reviewerUserId, generatedReport (text, modelVersion, promptVersion, finishReason, inputTokens, outputTokens, status), editedReport, editedAt, exportHistory[] (format, exportedAt, filename), timestamps. Indexes: `{ user: 1, reportDate: -1 }`, `{ user: 1, status: 1 }`, `{ branches: 1 }`. Paginated via `mongoose-paginate-v2`. Monthly compilation at `GET /api/v1/reports/monthly?year=&month=` and date-range export at `GET /api/v1/reports/export?dateFrom=&dateTo=`. ✅ Implemented
 - **AiGeneration** — report, provider, model, promptVersion, inputSnapshot, output, usageMetadata, finishReason, status
 
 ## Pagination
@@ -219,10 +225,14 @@ Branch and Report list endpoints use `mongoose-paginate-v2` with `page`, `limit`
 
 All Addis AI calls go through backend-only proxy services (`backend/src/services/ai/`):
 
-- **STT:** `POST /api/v2/stt` — receives browser audio → forwards as multipart/form-data (audio file + request_data JSON) → returns transcription. Implemented in `addisAiStt.service.js` via `addisAi.client.js` base client. **Accuracy-critical:** The chunking pipeline (ffmpeg WAV conversion → PCM-level WAV split) and correct MIME type per chunk (`audio/wav` for converted chunks) are mandatory. See RULES.md rules 13.21-13.25.
+- **STT:** `POST /api/v2/stt` — receives browser audio → forwards as multipart/form-data (audio file + request_data JSON) → returns transcription. Implemented in `addisAiStt.service.js` via `addisAi.client.js` base client. **Accuracy-critical:** The chunking pipeline (ffmpeg WAV conversion → PCM-level WAV split) and correct MIME type per chunk (`audio/wav` for converted chunks) are mandatory. See RULES.md rules 13.21-13.25. Status gate: accepts `audio_recorded`, `transcribed`, `transcription_reviewed`, `generated`, `finalized`.
 - **Text generation:** `POST /api/v1/chat_generate` — sends reviewed transcription + structured Amharic prompt → returns structured report. Implemented in `addisAiText.service.js`. Prompt built by `reportPrompt.service.js` with 18+ strict rules (Amharic word selection, information extraction, self-check). Model: `Addis-፩-አሌፍ`, temperature 0.2.
-- **Transcription review:** `PATCH /api/v1/reports/:reportId/transcriptions/review` — saves user-edited transcription, tracks reviewedAt + reviewerUserId, advances status to `transcription_reviewed`.
-- **Report generation:** `POST /api/v1/reports/:reportId/generate` — builds prompt from reviewed transcription, calls text generation, persists result, advances status to `generated`.
+- **Transcription review:** `PATCH /api/v1/reports/:reportId/transcriptions/review` — saves user-edited transcription, tracks reviewedAt + reviewerUserId, advances status to `transcription_reviewed`. Status gate: accepts `transcribed`, `transcription_reviewed`, `generated`, `finalized`. When saving at GENERATED/FINALIZED status, clears `generatedReport` so stale text doesn't linger.
+- **Report generation:** `POST /api/v1/reports/:reportId/generate` — builds prompt from reviewed transcription, calls text generation, persists result, advances status to `generated`. Status gate: accepts `transcription_reviewed`, `generated`, `finalized`. Transaction committed before long AI call.
+- **Preview:** `GET /api/v1/reports/:reportId/preview` — returns full report data for preview page.
+- **Edit save:** `PATCH /api/v1/reports/:reportId/generated-report` — saves user edits to `editedReport`, tracks `editedAt`.
+- **Finalize:** `POST /api/v1/reports/:reportId/finalize` — sets status to `finalized`, requires generated/edited content.
+- **Audio clip delete cascade:** `DELETE /api/v1/reports/:reportId/audio/:clipId` — when a clip is deleted and a transcription existed, resets transcription, reviewedTranscription, and generatedReport; rolls status to `audio_recorded` (or `draft` if no clips remain).
 - **TTS:** future scope
 - **Translation:** future scope
 - **Realtime:** future scope (backend-mediated WebSocket)

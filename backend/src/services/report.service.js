@@ -7,6 +7,7 @@ import Report from '../models/report.model.js';
 import ApiError from '../utils/apiError.js';
 import httpStatus from '../utils/httpStatus.js';
 import constants from '../utils/constants.js';
+import * as audioService from './audio.service.js';
 
 /**
  * List reports with pagination, search, status/branch/date filtering.
@@ -32,7 +33,11 @@ export const listReports = async (query, options = {}) => {
   );
   const sort = query.sort || '-createdAt';
 
-  const filter = { user: query.userId };
+  const filter = { user: query.userId, isDeleted: false };
+
+  if (query.showArchived !== 'true') {
+    filter.archivedAt = null;
+  }
 
   if (query.search) {
     const regex = new RegExp(query.search, 'i');
@@ -48,6 +53,12 @@ export const listReports = async (query, options = {}) => {
   }
 
   if (query.dateFrom || query.dateTo) {
+    if (query.dateFrom && isNaN(new Date(query.dateFrom).getTime())) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid dateFrom value');
+    }
+    if (query.dateTo && isNaN(new Date(query.dateTo).getTime())) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid dateTo value');
+    }
     filter.reportDate = {};
     if (query.dateFrom) {
       filter.reportDate.$gte = new Date(query.dateFrom);
@@ -229,6 +240,17 @@ export const generateMonthlyReport = async (userId, year, month, options = {}) =
 export const exportReportsByDateRange = async (userId, dateFrom, dateTo, options = {}) => {
   const session = options.session || null;
 
+  if (!dateFrom && !dateTo) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'At least one of dateFrom or dateTo is required for export');
+  }
+
+  if (dateFrom && isNaN(new Date(dateFrom).getTime())) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid dateFrom value');
+  }
+  if (dateTo && isNaN(new Date(dateTo).getTime())) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid dateTo value');
+  }
+
   const filter = { user: userId, reportDate: {} };
 
   if (dateFrom) {
@@ -251,4 +273,114 @@ export const exportReportsByDateRange = async (userId, dateFrom, dateTo, options
     exportedAt: new Date().toISOString(),
     reports,
   };
+};
+
+/**
+ * List archived reports with pagination (scoped to user).
+ *
+ * @param {object} query - Query parameters
+ * @param {string} query.userId
+ * @param {number} [query.page=1]
+ * @param {number} [query.limit=10]
+ * @param {object} [options] - { session }
+ * @returns {Promise<object>} Paginated result
+ */
+export const listArchivedReports = async (query, options = {}) => {
+  const page = Math.max(1, parseInt(query.page, 10) || constants.PAGINATION.DEFAULT_PAGE);
+  const limit = Math.min(
+    constants.PAGINATION.MAX_LIMIT,
+    Math.max(1, parseInt(query.limit, 10) || constants.PAGINATION.DEFAULT_LIMIT),
+  );
+
+  const filter = { user: query.userId, archivedAt: { $ne: null }, isDeleted: false };
+
+  const result = await Report.paginate(filter, {
+    page,
+    limit,
+    sort: '-archivedAt',
+    populate: { path: 'branches', select: 'name code' },
+    session: options.session || null,
+  });
+
+  return result;
+};
+
+/**
+ * Archive a report (soft delete with 30-day auto-delete deadline).
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} userId - Owning user ID
+ * @param {object} [options] - { session }
+ * @returns {Promise<object>} Archived report
+ * @throws {ApiError} 404 if not found
+ */
+export const archiveReport = async (reportId, userId, options = {}) => {
+  const session = options.session || null;
+
+  const report = await Report.findOne({ _id: reportId, user: userId, isDeleted: false }).session(session);
+  if (!report) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Report not found');
+  }
+
+  if (report.archivedAt) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Report is already archived');
+  }
+
+  report.previousStatus = report.status;
+  report.archivedAt = new Date();
+  report.archiveAt = new Date(Date.now() + constants.ARCHIVE_DURATION_DAYS * 24 * 60 * 60 * 1000);
+  report.status = constants.REPORT_STATUS.ARCHIVED;
+
+  await report.save({ session });
+  return report;
+};
+
+/**
+ * Recover an archived report, restoring its previous status.
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} userId - Owning user ID
+ * @param {object} [options] - { session }
+ * @returns {Promise<object>} Recovered report
+ * @throws {ApiError} 404 if not found
+ * @throws {ApiError} 400 if not archived
+ */
+export const recoverReport = async (reportId, userId, options = {}) => {
+  const session = options.session || null;
+
+  const report = await Report.findOne({ _id: reportId, user: userId, archivedAt: { $ne: null }, isDeleted: false }).session(session);
+  if (!report) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Archived report not found');
+  }
+
+  report.status = report.previousStatus || constants.REPORT_STATUS.DRAFT;
+  report.archivedAt = null;
+  report.archiveAt = null;
+  report.previousStatus = '';
+
+  await report.save({ session });
+  return report;
+};
+
+/**
+ * Permanently delete a report and its audio files.
+ *
+ * @param {string} reportId - Report ID
+ * @param {string} userId - Owning user ID
+ * @param {object} [options] - { session }
+ * @returns {Promise<object>} Deleted report data
+ * @throws {ApiError} 404 if not found
+ */
+export const permanentDeleteReport = async (reportId, userId, options = {}) => {
+  const session = options.session || null;
+
+  const report = await Report.findOne({ _id: reportId, user: userId }).session(session);
+  if (!report) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Report not found');
+  }
+
+  await audioService.deleteAllAudioFiles(report);
+
+  await report.deleteOne({ session });
+  return report;
 };

@@ -69,3 +69,33 @@ export const deleteReport = async (id) => {
     method: 'DELETE',
   });
 };
+
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const archiveReport = async (id) => {
+  return apiClient(`/reports/${id}/archive`, {
+    method: 'PATCH',
+  });
+};
+
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const recoverReport = async (id) => {
+  return apiClient(`/reports/${id}/recover`, {
+    method: 'POST',
+  });
+};
+
+/**
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export const permanentDeleteReport = async (id) => {
+  return apiClient(`/reports/${id}/permanent`, {
+    method: 'DELETE',
+  });
+};

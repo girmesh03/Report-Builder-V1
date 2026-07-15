@@ -13,7 +13,8 @@ import mongoose from 'mongoose';
 import fs from 'fs';
 import apiResponse from '../utils/apiResponse.js';
 import httpStatus from '../utils/httpStatus.js';
-import { attachAudioToReport } from '../services/audio.service.js';
+import { attachAudioToReport, deleteAudioClip } from '../services/audio.service.js';
+import Report from '../models/report.model.js';
 
 /**
  * Upload audio and attach it to a report.
@@ -60,6 +61,34 @@ export const uploadAudio = asyncHandler(async (req, res, next) => {
   } finally {
     session.endSession();
   }
+});
+
+/**
+ * Delete a single audio clip from a report.
+ *
+ * @param {import('express').Request} req - Express request
+ * @param {import('express').Response} res - Express response
+ * @param {import('express').NextFunction} next - Express next function
+ * @route DELETE /api/v1/reports/:reportId/audio/:clipId
+ */
+export const deleteClip = asyncHandler(async (req, res, next) => {
+  const report = await Report.findOne({
+    _id: req.params.reportId,
+    user: req.user._id.toString(),
+  });
+  if (!report) {
+    apiResponse(res, httpStatus.NOT_FOUND, 'Report not found');
+    return;
+  }
+
+  const updated = await deleteAudioClip(report, req.params.clipId);
+  apiResponse(res, httpStatus.OK, 'Audio clip deleted successfully', {
+    report: {
+      _id: updated._id,
+      status: updated.status,
+      audioClipCount: updated.audioClips.length,
+    },
+  });
 });
 
 /**

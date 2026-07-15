@@ -4,6 +4,7 @@
  * @module routes/branch
  */
 import { Router } from 'express';
+import { param } from 'express-validator';
 import { getBranches, getBranch, createBranch, updateBranch, deactivateBranch } from '../controllers/branch.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { createBranchRules, updateBranchRules } from '../validators/branch.validators.js';
@@ -17,6 +18,6 @@ router.get('/', getBranches);
 router.get('/:id', getBranch);
 router.post('/', createBranchRules, validate, createBranch);
 router.patch('/:id', updateBranchRules, validate, updateBranch);
-router.delete('/:id', deactivateBranch);
+router.delete('/:id', param('id').isMongoId(), validate, deactivateBranch);
 
 export default router;
